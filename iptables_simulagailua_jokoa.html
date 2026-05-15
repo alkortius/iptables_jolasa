@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="eu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iptables Simulagailua</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#080c14;color:#e2e8f0;min-height:100vh;padding:20px}
+#app{max-width:860px;margin:0 auto}
+h1{font-size:20px;font-weight:600;color:#f1f5f9;margin-bottom:3px}
+.sub{font-size:13px;color:#475569;margin-bottom:20px}
+.mono{font-family:'Courier New',monospace}
+.card{background:#0d1220;border:1px solid #1e2d45;border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.lbl{font-size:11px;color:#475569;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.topo-svg{display:block;width:100%}
+.preset-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.preset-btn{font-size:11px;padding:4px 9px;border-radius:5px;cursor:pointer;border:1px solid #1e2d45;background:#0d1220;color:#64748b;transition:all .15s}
+.preset-btn:hover{border-color:#334155;color:#94a3b8}
+.preset-btn.active{background:#0c1a2e;color:#60a5fa;border-color:#1e40af}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:12px}
+.form-field label{display:block;font-size:11px;color:#475569;margin-bottom:4px}
+select,input[type=text]{width:100%;padding:6px 8px;background:#080c14;border:1px solid #1e2d45;border-radius:6px;color:#e2e8f0;font-size:12px;font-family:'Courier New',monospace}
+select:focus{outline:none;border-color:#334155}
+.btn{padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;border:1px solid #1e2d45;background:transparent;color:#e2e8f0;transition:all .1s}
+.btn:hover{background:#0d1220;border-color:#334155}
+.btn-primary{background:#f1f5f9!important;color:#080c14!important;border:none!important;padding:8px 20px!important;font-size:13px!important;font-weight:600;border-radius:8px}
+.btn-primary:hover{filter:brightness(.9)}
+.btn-danger{color:#f87171;border-color:#7f1d1d}.btn-danger:hover{background:#2d0505}
+.btn-row{display:flex;align-items:center;gap:8px}
+.steps{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.step{display:grid;grid-template-columns:120px 1fr 90px;gap:8px;align-items:start;padding:7px 10px;border-radius:8px;border:1px solid #1e2d45;background:#080c14}
+.step.s-accept{border-color:#166534}.step.s-drop{border-color:#7f1d1d}
+.step-chain{font-size:11px;font-weight:600;line-height:1.5}
+.step-table{font-size:9px;color:#475569;font-weight:400}
+.step-cmd{font-size:10px;color:#64748b;word-break:break-all;line-height:1.6}
+.step-verdict{font-size:11px;font-weight:700;text-align:right}
+.v-accept{color:#4ade80}.v-drop{color:#f87171}.v-masq{color:#fbbf24}.v-nat{color:#a78bfa}.v-pass{color:#334155}
+.verdict-box{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px}
+.verdict-accept{background:#052e16;border:1px solid #166534}
+.verdict-drop{background:#2d0505;border:1px solid #7f1d1d}
+.verdict-icon{font-size:22px}
+.verdict-text{font-size:15px;font-weight:600}
+.verdict-sub{font-size:12px;color:#475569;margin-top:2px}
+.policies{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.policy-tag{font-family:'Courier New',monospace;font-size:10px;padding:3px 8px;background:#2d0505;color:#fca5a5;border:1px solid #7f1d1d;border-radius:4px}
+.tabs{display:flex;gap:3px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px}
+.tab-btn{font-size:11px;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Courier New',monospace;border:1px solid transparent;background:transparent;color:#475569;white-space:nowrap;transition:all .15s}
+.tab-btn:hover{color:#94a3b8}
+.tab-btn.active{background:#080c14;border-color:currentColor}
+.rule-list{display:flex;flex-direction:column;gap:5px}
+.rule-item{display:flex;align-items:center;gap:8px;background:#080c14;border:1px solid #1e2d45;border-radius:8px;padding:7px 10px}
+.rule-cmd{flex:1;font-size:11px;color:#e2e8f0;word-break:break-all;line-height:1.6}
+.target-tag{font-size:10px;padding:2px 7px;border-radius:4px;flex-shrink:0;font-family:'Courier New',monospace}
+.tt-accept{background:#052e16;color:#4ade80;border:1px solid #166534}
+.tt-drop{background:#2d0505;color:#f87171;border:1px solid #7f1d1d}
+.tt-nat{background:#1a0c2e;color:#a78bfa;border:1px solid #3d1d6e}
+.empty{font-size:13px;color:#334155;padding:10px 0}
+.add-form{margin-top:12px;background:#080c14;border:1px solid #1e2d45;border-radius:10px;padding:14px}
+.add-form-title{font-size:13px;font-weight:600;margin-bottom:12px;color:#cbd5e1}
+.cs-row{display:flex;gap:12px;flex-wrap:wrap}
+.cs-label{display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;color:#94a3b8}
+input[type=checkbox]{width:13px;height:13px;accent-color:#60a5fa;flex-shrink:0}
+.cmd-preview{font-family:'Courier New',monospace;font-size:11px;color:#64748b;background:#0d1220;padding:7px 10px;border-radius:6px;word-break:break-all;line-height:1.6;margin-bottom:10px;border:1px solid #1e2d45}
+.nat-note{margin-bottom:10px;font-size:12px;color:#475569;padding:7px 10px;background:#0d1220;border:1px solid #1e2d45;border-radius:6px}
+.pkt-line{font-size:13px;padding:8px 12px;background:#080c14;border:1px solid #1e2d45;border-radius:8px;margin-bottom:10px;font-family:'Courier New',monospace}
+.ctstate-badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;background:#1a1205;color:#fbbf24;border:1px solid #3d2d0a;margin-left:4px}
+input[type=text][readonly]{color:#334155;cursor:default}
+@media(max-width:560px){
+  .step{grid-template-columns:85px 1fr 65px}
+  .step-chain{font-size:9px}.step-cmd{font-size:9px}.step-verdict{font-size:9px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>🔥 iptables Simulagailua</h1>
+  <p class="sub">Bidali paketeak LAN, WAN eta DMZ artean eta ikusi iptables arauek nola prozesatzen dituzten</p>
+  <div id="root"></div>
+</div>
+<script>
+const ZONE_COLOR={WAN:'#f87171',LAN:'#4ade80',DMZ:'#fbbf24',FIREWALL:'#60a5fa'};
+const ZONE_BG={WAN:'#2d0505',LAN:'#052e16',DMZ:'#1a1205',FIREWALL:'#0c1a2e'};
+const CHAIN_COLOR={PREROUTING:'#60a5fa',INPUT:'#fb923c',FORWARD:'#4ade80',OUTPUT:'#fb923c',POSTROUTING:'#60a5fa'};
+const NAT_CHAINS=['PREROUTING','POSTROUTING'];
+const FILTER_TARGETS=['ACCEPT','DROP','REJECT','LOG'];
+const NAT_TARGETS=['MASQUERADE','SNAT','DNAT','REDIRECT','LOG'];
+
+function targetsFor(chain){return NAT_CHAINS.includes(chain)?NAT_TARGETS:FILTER_TARGETS;}
+function tableFor(chain){return NAT_CHAINS.includes(chain)?'nat':'filter';}
+
+const DEFAULT_RULES=[
+  {id:1, table:'filter',chain:'INPUT',      inIf:'*',  outIf:'*',  proto:'any',dport:'*', cs:[],                        target:'DROP',isPolicy:true},
+  {id:2, table:'filter',chain:'FORWARD',    inIf:'*',  outIf:'*',  proto:'any',dport:'*', cs:[],                        target:'DROP',isPolicy:true},
+  {id:3, table:'filter',chain:'OUTPUT',     inIf:'*',  outIf:'*',  proto:'any',dport:'*', cs:[],                        target:'DROP',isPolicy:true},
+  {id:4, table:'filter',chain:'INPUT',      inIf:'LAN',outIf:'*',  proto:'tcp',dport:'22',cs:['NEW','ESTABLISHED'],      target:'ACCEPT'},
+  {id:5, table:'filter',chain:'OUTPUT',     inIf:'*',  outIf:'*',  proto:'any',dport:'*', cs:['ESTABLISHED'],           target:'ACCEPT'},
+  {id:6, table:'filter',chain:'FORWARD',    inIf:'LAN',outIf:'WAN',proto:'any',dport:'*', cs:['NEW','ESTABLISHED'],      target:'ACCEPT'},
+  {id:7, table:'filter',chain:'FORWARD',    inIf:'WAN',outIf:'LAN',proto:'any',dport:'*', cs:['ESTABLISHED','RELATED'],  target:'ACCEPT'},
+  {id:8, table:'filter',chain:'FORWARD',    inIf:'WAN',outIf:'DMZ',proto:'tcp',dport:'80',cs:['NEW','ESTABLISHED'],      target:'ACCEPT'},
+  {id:9, table:'filter',chain:'FORWARD',    inIf:'WAN',outIf:'DMZ',proto:'tcp',dport:'443',cs:['NEW','ESTABLISHED'],     target:'ACCEPT'},
+  {id:10,table:'filter',chain:'FORWARD',    inIf:'DMZ',outIf:'WAN',proto:'any',dport:'*', cs:['ESTABLISHED','RELATED'],  target:'ACCEPT'},
+  {id:11,table:'filter',chain:'FORWARD',    inIf:'LAN',outIf:'DMZ',proto:'tcp',dport:'80',cs:['NEW','ESTABLISHED'],      target:'ACCEPT'},
+  {id:12,table:'filter',chain:'FORWARD',    inIf:'LAN',outIf:'DMZ',proto:'tcp',dport:'443',cs:['NEW','ESTABLISHED'],     target:'ACCEPT'},
+  {id:13,table:'filter',chain:'FORWARD',    inIf:'LAN',outIf:'DMZ',proto:'tcp',dport:'21',cs:['NEW','ESTABLISHED'],      target:'ACCEPT'},
+  {id:14,table:'filter',chain:'FORWARD',    inIf:'LAN',outIf:'DMZ',proto:'tcp',dport:'20',cs:['NEW','ESTABLISHED'],      target:'ACCEPT'},
+  {id:15,table:'filter',chain:'FORWARD',    inIf:'DMZ',outIf:'LAN',proto:'any',dport:'*', cs:['ESTABLISHED','RELATED'],  target:'ACCEPT'},
+  {id:16,table:'filter',chain:'FORWARD',    inIf:'DMZ',outIf:'LAN',proto:'any',dport:'*', cs:['NEW'],                    target:'DROP'},
+  {id:17,table:'nat',   chain:'POSTROUTING',inIf:'*',  outIf:'WAN',proto:'any',dport:'*', cs:[],                        target:'MASQUERADE'},
+];
+
+function getPath(src,dst){
+  if(dst==='FIREWALL')return[{chain:'PREROUTING',table:'nat'},{chain:'INPUT',table:'filter'}];
+  if(src==='FIREWALL')return[{chain:'OUTPUT',table:'filter'},{chain:'POSTROUTING',table:'nat'}];
+  return[{chain:'PREROUTING',table:'nat'},{chain:'FORWARD',table:'filter'},{chain:'POSTROUTING',table:'nat'}];
+}
+function matchRule(pkt,rule){
+  if(rule.isPolicy)return false;
+  if(rule.inIf!=='*'&&rule.inIf!==pkt.src)return false;
+  if(rule.outIf!=='*'&&rule.outIf!==pkt.dst)return false;
+  if(rule.proto!=='any'&&rule.proto!==pkt.proto)return false;
+  if(rule.dport!=='*'&&rule.dport!==pkt.dport)return false;
+  if(rule.cs.length>0&&!rule.cs.includes(pkt.ctstate))return false;
+  return true;
+}
+function ruleToCmd(rule){
+  if(rule.isPolicy)return'iptables -P '+rule.chain+' '+rule.target;
+  let s='iptables';
+  if(rule.table==='nat')s+=' -t nat';
+  s+=' -A '+rule.chain;
+  if(rule.inIf!=='*')s+=' -i '+rule.inIf;
+  if(rule.outIf!=='*')s+=' -o '+rule.outIf;
+  if(rule.proto!=='any')s+=' -p '+rule.proto;
+  if(rule.dport!=='*')s+=' --dport '+rule.dport;
+  if(rule.cs&&rule.cs.length)s+=' -m conntrack --ctstate '+rule.cs.join(',');
+  s+=' -j '+rule.target;
+  return s;
+}
+function simulate(pkt,rules){
+  const path=getPath(pkt.src,pkt.dst);
+  const steps=[];
+  const pol={};
+  rules.filter(r=>r.isPolicy).forEach(r=>{pol[r.chain]=r.target;});
+  for(const{chain,table}of path){
+    const cr=rules.filter(r=>r.chain===chain&&r.table===table&&!r.isPolicy);
+    let matched=null;
+    for(const rule of cr){if(matchRule(pkt,rule)){matched=rule;break;}}
+    if(matched){
+      steps.push({chain,table,rule:matched,verdict:matched.target});
+      if(matched.target==='DROP'||matched.target==='REJECT')return{steps,final:'DROP'};
+    }else if(table==='filter'){
+      const p=pol[chain]||'DROP';
+      steps.push({chain,table,rule:null,verdict:p,isDefault:true});
+      return{steps,final:p};
+    }else{
+      steps.push({chain,table,rule:null,verdict:'PASA'});
+    }
+  }
+  return{steps,final:'ACCEPT'};
+}
+
+const PRESETS=[
+  {label:'WAN→DMZ HTTP',  src:'WAN',dst:'DMZ',      proto:'tcp',dport:'80', ctstate:'NEW'},
+  {label:'WAN→DMZ HTTPS', src:'WAN',dst:'DMZ',      proto:'tcp',dport:'443',ctstate:'NEW'},
+  {label:'WAN→DMZ SSH',   src:'WAN',dst:'DMZ',      proto:'tcp',dport:'22', ctstate:'NEW'},
+  {label:'WAN→LAN HTTP',  src:'WAN',dst:'LAN',      proto:'tcp',dport:'80', ctstate:'NEW'},
+  {label:'LAN→WAN HTTP',  src:'LAN',dst:'WAN',      proto:'tcp',dport:'80', ctstate:'NEW'},
+  {label:'LAN→DMZ FTP',   src:'LAN',dst:'DMZ',      proto:'tcp',dport:'21', ctstate:'NEW'},
+  {label:'LAN→DMZ HTTP',  src:'LAN',dst:'DMZ',      proto:'tcp',dport:'80', ctstate:'NEW'},
+  {label:'DMZ→LAN NEW',   src:'DMZ',dst:'LAN',      proto:'tcp',dport:'80', ctstate:'NEW'},
+  {label:'DMZ→LAN ESTAB.',src:'DMZ',dst:'LAN',      proto:'tcp',dport:'80', ctstate:'ESTABLISHED'},
+  {label:'LAN→FW SSH',    src:'LAN',dst:'FIREWALL', proto:'tcp',dport:'22', ctstate:'NEW'},
+  {label:'WAN→FW SSH',    src:'WAN',dst:'FIREWALL', proto:'tcp',dport:'22', ctstate:'NEW'},
+];
+
+let S={
+  rules:DEFAULT_RULES.map(r=>({...r,cs:[...r.cs]})),
+  pkt:{src:'WAN',dst:'DMZ',proto:'tcp',dport:'80',ctstate:'NEW'},
+  result:null,tab:'FORWARD',showAdd:false,
+  nr:{chain:'FORWARD',inIf:'*',outIf:'*',proto:'any',dport:'*',cs:[],target:'ACCEPT'},
+  nid:18
+};
+
+function buildTopo(){
+  const{pkt,result}=S;
+  const activePath=result?getPath(pkt.src,pkt.dst).map(x=>x.chain):[];
+  const hasR=activePath.length>0;
+  const acc=result&&result.final==='ACCEPT';
+  const pos={WAN:{x:75,y:95},FIREWALL:{x:300,y:95},LAN:{x:525,y:95},DMZ:{x:300,y:215}};
+  const W=90,H=44;
+  function edgeActive(a,b){
+    if(!hasR)return false;
+    const s=pkt.src,d=pkt.dst;
+    if(s!=='FIREWALL'&&d!=='FIREWALL'){
+      if((a===s&&b==='FIREWALL')||(b===s&&a==='FIREWALL'))return true;
+      if((a===d&&b==='FIREWALL')||(b===d&&a==='FIREWALL'))return true;
+    }else{if((a===s&&b===d)||(a===d&&b===s))return true;}
+    return false;
+  }
+  const edges=[['WAN','FIREWALL'],['FIREWALL','LAN'],['FIREWALL','DMZ']];
+  const lc=!hasR?'#1e2d45':acc?'#166534':'#7f1d1d';
+  let svg='<defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="'+lc+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>';
+  edges.forEach(function(e){
+    var a=e[0],b=e[1],pa=pos[a],pb=pos[b];
+    var x1=pa.x,y1=pa.y,x2=pb.x,y2=pb.y;
+    if(a==='FIREWALL'){x1+=pb.x>pa.x?W/2:(pb.x<pa.x?-W/2:0);y1+=pb.y>pa.y?H/2:0;}
+    else{x1+=pb.x>pa.x?W/2:-W/2;}
+    if(b==='FIREWALL'){x2+=pa.x>pb.x?W/2:(pa.x<pb.x?-W/2:0);y2+=pa.y>pb.y?H/2:0;}
+    else{x2+=pa.x>pb.x?W/2:-W/2;}
+    var active=edgeActive(a,b);
+    var dash=active&&!acc?' stroke-dasharray="5 3"':'';
+    var marker=active?' marker-end="url(#arr)"':'';
+    svg+='<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(active?lc:'#1e2d45')+'" stroke-width="'+(active?2:1)+'"'+dash+marker+'/>';
+  });
+  Object.keys(pos).forEach(function(zone){
+    var p=pos[zone],zc=ZONE_COLOR[zone],zb=ZONE_BG[zone];
+    var inv=hasR&&(pkt.src===zone||pkt.dst===zone);
+    svg+='<g><rect x="'+(p.x-W/2)+'" y="'+(p.y-H/2)+'" width="'+W+'" height="'+H+'" rx="8" fill="'+(inv?zb:'#080c14')+'" stroke="'+(inv?zc:'#1e2d45')+'" stroke-width="'+(inv?2:.5)+'"/>';
+    svg+='<text x="'+p.x+'" y="'+p.y+'" text-anchor="middle" dominant-baseline="central" font-family="Courier New,monospace" font-size="12" font-weight="600" fill="'+zc+'">'+zone+'</text></g>';
+  });
+  if(hasR&&result){
+    var s=pkt.src,d=pkt.dst;
+    result.steps.forEach(function(step,i){
+      var cc=CHAIN_COLOR[step.chain]||'#64748b';
+      var lx,ly;
+      var isNonFW=s!=='FIREWALL'&&d!=='FIREWALL';
+      if(isNonFW){
+        if(i===0){lx=(pos[s].x+pos.FIREWALL.x)/2;ly=Math.min(pos[s].y,pos.FIREWALL.y)-26;}
+        else if(i===1){lx=pos.FIREWALL.x;ly=pos.FIREWALL.y-36;}
+        else{lx=(pos.FIREWALL.x+pos[d].x)/2;ly=Math.min(pos.FIREWALL.y,pos[d].y)-26;}
+      }else if(d==='FIREWALL'){
+        if(i===0){lx=(pos[s].x+pos.FIREWALL.x)/2;ly=pos[s].y-26;}
+        else{lx=pos.FIREWALL.x;ly=pos.FIREWALL.y-36;}
+      }else{
+        if(i===0){lx=pos.FIREWALL.x;ly=pos.FIREWALL.y-36;}
+        else{lx=(pos.FIREWALL.x+pos[d].x)/2;ly=Math.min(pos.FIREWALL.y,pos[d].y)-26;}
+      }
+      var vd=step.verdict;
+      var vc=vd==='ACCEPT'?'#4ade80':(vd==='DROP'||vd==='REJECT')?'#f87171':(vd==='MASQUERADE'||vd==='SNAT'||vd==='DNAT')?'#a78bfa':'#475569';
+      svg+='<g><rect x="'+(lx-38)+'" y="'+(ly-12)+'" width="76" height="23" rx="4" fill="#080c14" stroke="'+cc+'" stroke-width=".5"/>';
+      svg+='<text x="'+lx+'" y="'+(ly-2)+'" text-anchor="middle" font-family="Courier New,monospace" font-size="9" font-weight="600" fill="'+cc+'">'+step.chain+'</text>';
+      svg+='<text x="'+lx+'" y="'+(ly+7)+'" text-anchor="middle" font-family="Courier New,monospace" font-size="8" fill="'+vc+'">'+vd+'</text></g>';
+    });
+  }
+  return'<svg class="topo-svg" viewBox="0 0 600 275" xmlns="http://www.w3.org/2000/svg">'+svg+'</svg>';
+}
+
+function verdictCls(v){
+  if(v==='ACCEPT')return'v-accept';
+  if(v==='DROP'||v==='REJECT')return'v-drop';
+  if(v==='MASQUERADE')return'v-masq';
+  if(v==='SNAT'||v==='DNAT')return'v-nat';
+  return'v-pass';
+}
+function targetTagCls(t){
+  if(t==='ACCEPT')return'tt-accept';
+  if(t==='DROP'||t==='REJECT')return'tt-drop';
+  return'tt-nat';
+}
+
+function render(){
+  var rules=S.rules,pkt=S.pkt,result=S.result,tab=S.tab,showAdd=S.showAdd,nr=S.nr;
+  var ALL_CHAINS=['PREROUTING','INPUT','FORWARD','OUTPUT','POSTROUTING'];
+  var tabRules=rules.filter(function(r){return!r.isPolicy&&r.chain===tab;});
+  var policies=rules.filter(function(r){return r.isPolicy;});
+  var p=pkt;
+
+  var presetsHtml=PRESETS.map(function(pr){
+    var a=pr.src===p.src&&pr.dst===p.dst&&pr.dport===p.dport&&pr.ctstate===p.ctstate;
+    return'<button class="preset-btn'+(a?' active':'')+'" onclick=\'applyPreset('+JSON.stringify(pr)+')\'>'+pr.label+'</button>';
+  }).join('');
+
+  function sel(label,key,opts){
+    var optH=opts.map(function(o){return'<option value="'+o+'"'+(p[key]===o?' selected':'')+'>'+o+'</option>';}).join('');
+    return'<div class="form-field"><label>'+label+'</label><select onchange="setPkt(\''+key+'\',this.value)">'+optH+'</select></div>';
+  }
+
+  var simHtml='';
+  if(result){
+    var zc=function(z){return ZONE_COLOR[z]||'#94a3b8';};
+    var pktLine='<div class="pkt-line"><span style="color:'+zc(p.src)+';font-weight:600">'+p.src+'</span>'
+      +'<span style="color:#334155"> → </span>'
+      +'<span style="color:'+zc(p.dst)+';font-weight:600">'+p.dst+'</span>'
+      +'<span style="color:#64748b">  '+p.proto+(p.dport!=='*'?':'+p.dport:'')+'</span>'
+      +'<span class="ctstate-badge">'+p.ctstate+'</span></div>';
+    var stepsHtml=result.steps.map(function(step){
+      var cc=CHAIN_COLOR[step.chain]||'#64748b';
+      var vd=step.verdict;
+      var vc=verdictCls(vd);
+      var bc=(vd==='DROP'||vd==='REJECT')?' s-drop':vd==='ACCEPT'?' s-accept':'';
+      var cmd=step.rule?ruleToCmd(step.rule):(vd==='PASA'?'nat: araurik ez':'politika lehenetsía: '+vd);
+      return'<div class="step'+bc+'"><div class="step-chain mono" style="color:'+cc+'">'+step.chain+'<br><span class="step-table">('+step.table+')</span></div>'
+        +'<div class="step-cmd mono">'+cmd+'</div>'
+        +'<div class="step-verdict mono '+vc+'">'+vd+'</div></div>';
+    }).join('');
+    var acc=result.final==='ACCEPT';
+    var verdictHtml='<div class="verdict-box '+(acc?'verdict-accept':'verdict-drop')+'">'
+      +'<span class="verdict-icon">'+(acc?'✅':'❌')+'</span>'
+      +'<div><div class="verdict-text" style="color:'+(acc?'#4ade80':'#f87171')+'">Paketea '+(acc?'ONARTUTA':'BLOKEATU')+'</div>'
+      +'<div class="verdict-sub">'+p.src+' → '+p.dst+' | '+p.proto+(p.dport!=='*'?':'+p.dport:'')+' | '+p.ctstate+'</div></div></div>';
+    simHtml='<div class="card"><div class="lbl">Ibilbide-azterketa</div>'+pktLine+'<div class="steps">'+stepsHtml+'</div>'+verdictHtml+'</div>';
+  }
+
+  var rulesHtml=tabRules.length===0?'<div class="empty">Kate honetan ez dago araurik</div>'
+    :tabRules.map(function(rule){
+      return'<div class="rule-item"><span class="rule-cmd mono">'+ruleToCmd(rule)+'</span>'
+        +'<span class="target-tag '+targetTagCls(rule.target)+'">'+rule.target+'</span>'
+        +'<button class="btn btn-danger" onclick="delRule('+rule.id+')">✕</button></div>';
+    }).join('');
+
+  var isNat=NAT_CHAINS.includes(nr.chain);
+  var nrTable=tableFor(nr.chain);
+  var nrTargets=targetsFor(nr.chain);
+  var nrTargetOpts=nrTargets.map(function(t){return'<option value="'+t+'"'+(nr.target===t?' selected':'')+'>'+t+'</option>';}).join('');
+  var chainOpts=['PREROUTING','INPUT','FORWARD','OUTPUT','POSTROUTING'].map(function(c){return'<option value="'+c+'"'+(nr.chain===c?' selected':'')+'>'+c+'</option>';}).join('');
+  var csChecks=['NEW','ESTABLISHED','RELATED','INVALID'].map(function(s){
+    return'<label class="cs-label"><input type="checkbox" '+(nr.cs.includes(s)?'checked':'')+' onchange="toggleCs(\''+s+'\')"> '+s+'</label>';
+  }).join('');
+
+  var addFormHtml=showAdd?'<div class="add-form"><div class="add-form-title">Arau berria</div>'
+    +'<div class="form-grid">'
+    +'<div class="form-field"><label>Katea</label><select onchange="setNrChain(this.value)">'+chainOpts+'</select></div>'
+    +'<div class="form-field"><label>Taula (automatikoa)</label><input type="text" value="'+nrTable+'" readonly></div>'
+    +'<div class="form-field"><label>-i sarrera</label><select onchange="setNr(\'inIf\',this.value)">'
+      +['*','WAN','LAN','DMZ'].map(function(o){return'<option value="'+o+'"'+(nr.inIf===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select></div>'
+    +'<div class="form-field"><label>-o irteera</label><select onchange="setNr(\'outIf\',this.value)">'
+      +['*','WAN','LAN','DMZ'].map(function(o){return'<option value="'+o+'"'+(nr.outIf===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select></div>'
+    +'<div class="form-field"><label>-p protokoloa</label><select onchange="setNr(\'proto\',this.value)">'
+      +['any','tcp','udp','icmp'].map(function(o){return'<option value="'+o+'"'+(nr.proto===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select></div>'
+    +'<div class="form-field"><label>--dport portua</label><select onchange="setNr(\'dport\',this.value)">'
+      +['*','20','21','22','53','80','443','3306','8080'].map(function(o){return'<option value="'+o+'"'+(nr.dport===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select></div>'
+    +'<div class="form-field"><label>-j eragiketa</label><select onchange="setNr(\'target\',this.value)">'+nrTargetOpts+'</select></div>'
+    +'</div>'
+    +(isNat
+      ?'<div class="nat-note">⚠️ <strong>PREROUTING / POSTROUTING</strong> nat taulan daude. Eragiketa posibleak: MASQUERADE, SNAT, DNAT, REDIRECT. ACCEPT eta DROP ez daude onartuta kateetan.</div>'
+      :'<div style="margin-bottom:10px"><div class="lbl">--ctstate (conntrack)</div><div class="cs-row">'+csChecks+'</div></div>'
+    )
+    +'<div class="cmd-preview">'+ruleToCmd({chain:nr.chain,table:nrTable,inIf:nr.inIf,outIf:nr.outIf,proto:nr.proto,dport:nr.dport,cs:nr.cs,target:nr.target,isPolicy:false})+'</div>'
+    +'<div class="btn-row"><button class="btn btn-primary" onclick="addRule()">Gehitu</button><button class="btn" onclick="setShowAdd(false)">Utzi</button></div>'
+    +'</div>':'';
+
+  var tabsHtml=ALL_CHAINS.map(function(c){
+    var cnt=rules.filter(function(r){return r.chain===c&&!r.isPolicy;}).length;
+    var cc=CHAIN_COLOR[c];
+    var a=tab===c;
+    return'<button class="tab-btn'+(a?' active':'')+'" style="'+(a?'color:'+cc:'')+'" onclick="setTab(\''+c+'\')">'+c+' ('+cnt+')</button>';
+  }).join('');
+
+  document.getElementById('root').innerHTML=
+    '<div class="card">'+buildTopo()+'</div>'
+    +'<div class="lbl" style="margin-bottom:6px">Eszenatoki azkarrak</div>'
+    +'<div class="preset-wrap">'+presetsHtml+'</div>'
+    +'<div class="card"><div class="lbl">Pakete-parametroak</div>'
+    +'<div class="form-grid">'
+    +sel('Jatorria (-i)','src',['WAN','LAN','DMZ','FIREWALL'])
+    +sel('Helmuga (-o)','dst',['WAN','LAN','DMZ','FIREWALL'])
+    +sel('Protokoloa (-p)','proto',['tcp','udp','icmp','any'])
+    +sel('Portua (--dport)','dport',['*','20','21','22','53','80','443','3306','8080'])
+    +sel('ctstate','ctstate',['NEW','ESTABLISHED','RELATED','INVALID'])
+    +'</div><button class="btn btn-primary" onclick="runSim()">Bidali paketea →</button></div>'
+    +simHtml
+    +'<div class="card">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<div class="lbl" style="margin-bottom:0">Arau-kudeatzailea</div>'
+    +'<div class="btn-row"><button class="btn" onclick="resetRules()">Berrezarri</button>'
+    +'<button class="btn" onclick="setShowAdd(!S.showAdd)">+ Gehitu</button></div></div>'
+    +'<div class="policies">'+policies.map(function(r){return'<span class="policy-tag">'+ruleToCmd(r)+'</span>';}).join('')+'</div>'
+    +'<div class="tabs">'+tabsHtml+'</div>'
+    +'<div class="rule-list">'+rulesHtml+'</div>'
+    +addFormHtml
+    +'</div>';
+}
+
+function runSim(){S.result=simulate(S.pkt,S.rules);render();}
+function setPkt(k,v){S.pkt[k]=v;S.result=null;render();}
+function applyPreset(p){S.pkt=p;S.result=null;render();}
+function resetRules(){S.rules=DEFAULT_RULES.map(function(r){return Object.assign({},r,{cs:r.cs.slice()});});S.result=null;render();}
+function delRule(id){S.rules=S.rules.filter(function(r){return r.id!==id||r.isPolicy;});render();}
+function setTab(t){S.tab=t;render();}
+function setShowAdd(v){S.showAdd=v;render();}
+function setNr(k,v){S.nr[k]=v;render();}
+function setNrChain(chain){
+  var targets=targetsFor(chain);
+  S.nr.chain=chain;
+  S.nr.target=targets[0];
+  if(NAT_CHAINS.includes(chain))S.nr.cs=[];
+  render();
+}
+function toggleCs(s){var cs=S.nr.cs;var i=cs.indexOf(s);if(i>=0)cs.splice(i,1);else cs.push(s);render();}
+function addRule(){
+  var table=tableFor(S.nr.chain);
+  S.rules.push(Object.assign({},S.nr,{table:table,id:S.nid,cs:S.nr.cs.slice(),isPolicy:false}));
+  S.nid++;S.showAdd=false;render();
+}
+
+render();
+</script>
+</body>
+</html>
