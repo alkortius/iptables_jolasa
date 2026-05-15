@@ -1,1 +1,1363 @@
+<!DOCTYPE html>
+<html lang="eu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iptables Ikaskuntza - Simuladore Interaktiboa</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    color: #00d4ff;
+    margin-bottom: 10px;
+    font-size: 2em;
+    text-shadow: 0 0 10px rgba(0,212,255,0.3);
+  }
+  .subtitle {
+    text-align: center;
+    color: #8892b0;
+    margin-bottom: 25px;
+    font-size: 1.1em;
+  }
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  .left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .panel {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+  }
+  .panel h2 {
+    color: #00d4ff;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+    border-bottom: 2px solid rgba(0,212,255,0.3);
+    padding-bottom: 8px;
+  }
+  .panel h3 {
+    color: #64ffda;
+    margin: 15px 0 8px 0;
+    font-size: 1.1em;
+  }
 
+  /* Topologia SVG */
+  .topology-container {
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    padding: 15px;
+    position: relative;
+    overflow: hidden;
+  }
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .zone-label {
+    font-size: 14px;
+    font-weight: bold;
+    fill: #ccd6f6;
+  }
+  .device-label {
+    font-size: 11px;
+    fill: #a8b2d1;
+  }
+  .device-ip {
+    font-size: 9px;
+    fill: #8892b0;
+  }
+  .packet {
+    fill: #ffd700;
+    filter: drop-shadow(0 0 8px rgba(255,215,0,0.8));
+  }
+  .chain-active-accept { stroke: #00ff88; stroke-width: 3; filter: drop-shadow(0 0 5px #00ff88); }
+  .chain-active-drop { stroke: #ff4444; stroke-width: 3; filter: drop-shadow(0 0 5px #ff4444); }
+  .chain-inactive { stroke: #444; stroke-width: 1; }
+
+  /* Modu aukeraketa */
+  .mode-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .mode-btn {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid rgba(0,212,255,0.3);
+    background: rgba(0,212,255,0.1);
+    color: #ccd6f6;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.3s;
+  }
+  .mode-btn.active {
+    background: rgba(0,212,255,0.3);
+    border-color: #00d4ff;
+    color: #00d4ff;
+    font-weight: bold;
+  }
+  .mode-btn:hover:not(.active) {
+    background: rgba(0,212,255,0.2);
+  }
+
+  /* Pakete sortzailea */
+  .packet-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 15px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  .form-group.full-width {
+    grid-column: 1 / -1;
+  }
+  label {
+    color: #8892b0;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+  }
+  select, input, textarea {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #e0e0e0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.95em;
+  }
+  select:focus, input:focus, textarea:focus {
+    outline: none;
+    border-color: #00d4ff;
+  }
+  textarea {
+    font-family: 'Courier New', monospace;
+    resize: vertical;
+    min-height: 300px;
+    line-height: 1.5;
+  }
+
+  /* Botoiak */
+  .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: all 0.3s;
+    margin: 5px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #00d4ff, #0099cc);
+    color: #0a192f;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0,212,255,0.4);
+  }
+  .btn-success {
+    background: linear-gradient(135deg, #00ff88, #00cc66);
+    color: #0a192f;
+  }
+  .btn-danger {
+    background: linear-gradient(135deg, #ff4444, #cc0000);
+    color: white;
+  }
+  .btn-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 15px;
+  }
+
+  /* Emaitza panela */
+  .result-panel {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.3);
+    border-left: 4px solid #00d4ff;
+  }
+  .result-panel.success { border-left-color: #00ff88; }
+  .result-panel.fail { border-left-color: #ff4444; }
+  .chain-log {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    line-height: 1.8;
+    margin-top: 10px;
+  }
+  .log-accept { color: #00ff88; }
+  .log-drop { color: #ff4444; }
+  .log-nomatch { color: #666; }
+  .log-route { color: #ffd700; }
+
+  /* Puntuazioa */
+  .score-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+  }
+  .score-item {
+    background: rgba(0,0,0,0.3);
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+  }
+  .score-value {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #00d4ff;
+  }
+  .score-label {
+    font-size: 0.8em;
+    color: #8892b0;
+  }
+
+  /* Akats kontagailuak */
+  .error-counters {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+  }
+  .counter {
+    background: rgba(255,68,68,0.1);
+    border: 1px solid rgba(255,68,68,0.3);
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9em;
+  }
+  .counter.good {
+    background: rgba(0,255,136,0.1);
+    border-color: rgba(0,255,136,0.3);
+  }
+
+  /* Aholkuak */
+  .tips {
+    background: rgba(255,215,0,0.1);
+    border: 1px solid rgba(255,215,0,0.3);
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 0.95em;
+  }
+  .tips strong {
+    color: #ffd700;
+  }
+
+  /* Animazioa */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .animating {
+    animation: pulse 0.5s infinite;
+  }
+
+  /* Responsive */
+  @media (max-width: 1200px) {
+    .container {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h1>🔥 Iptables Ikaskuntza Jolas Interaktiboa</h1>
+<p class="subtitle">Konfiguratu suhesia, simulatu paketeak eta ikasi zure akatsetatik</p>
+
+<div class="container">
+  <div class="left-panel">
+    <!-- Topologia -->
+    <div class="panel topology-container">
+      <h2>🌐 Sare Topologia</h2>
+      <svg viewBox="0 0 900 500" id="topology-svg">
+        <!-- Definizioak -->
+        <defs>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- WAN / Internet (goian) -->
+        <rect x="50" y="20" width="800" height="120" rx="10" fill="rgba(0,150,255,0.1)" stroke="#0096ff" stroke-width="2" stroke-dasharray="5,5"/>
+        <text x="450" y="40" text-anchor="middle" class="zone-label" fill="#0096ff">🌍 WAN / INTERNET (IP Publikoak)</text>
+
+        <!-- WAN ekipoak -->
+        <rect x="80" y="55" width="140" height="70" rx="8" fill="rgba(0,150,255,0.15)" stroke="#0096ff" stroke-width="1.5"/>
+        <text x="150" y="75" text-anchor="middle" class="device-label" fill="#0096ff">💻 PC-Internet</text>
+        <text x="150" y="92" text-anchor="middle" class="device-ip">203.0.113.10</text>
+        <text x="150" y="108" text-anchor="middle" class="device-ip" font-size="8">Ordularia</text>
+
+        <rect x="250" y="55" width="140" height="70" rx="8" fill="rgba(0,150,255,0.15)" stroke="#0096ff" stroke-width="1.5"/>
+        <text x="320" y="75" text-anchor="middle" class="device-label" fill="#0096ff">☁️ DNS-Google</text>
+        <text x="320" y="92" text-anchor="middle" class="device-ip">8.8.8.8</text>
+        <text x="320" y="108" text-anchor="middle" class="device-ip" font-size="8">DNS Zerbitzaria</text>
+
+        <rect x="420" y="55" width="140" height="70" rx="8" fill="rgba(0,150,255,0.15)" stroke="#0096ff" stroke-width="1.5"/>
+        <text x="490" y="75" text-anchor="middle" class="device-label" fill="#0096ff">🏢 Remote-Office</text>
+        <text x="490" y="92" text-anchor="middle" class="device-ip">198.51.100.50</text>
+        <text x="490" y="108" text-anchor="middle" class="device-ip" font-size="8">Bulego Urruna</text>
+
+        <rect x="590" y="55" width="140" height="70" rx="8" fill="rgba(255,50,50,0.15)" stroke="#ff4444" stroke-width="1.5"/>
+        <text x="660" y="75" text-anchor="middle" class="device-label" fill="#ff4444">🎭 Hacker-PC</text>
+        <text x="660" y="92" text-anchor="middle" class="device-ip">203.0.113.99</text>
+        <text x="660" y="108" text-anchor="middle" class="device-ip" font-size="8">Ezezaguna</text>
+
+        <rect x="760" y="55" width="80" height="70" rx="8" fill="rgba(0,150,255,0.15)" stroke="#0096ff" stroke-width="1.5"/>
+        <text x="800" y="80" text-anchor="middle" class="device-label" fill="#0096ff" font-size="10">🌐 Web</text>
+        <text x="800" y="95" text-anchor="middle" class="device-ip" font-size="9">Publikoak</text>
+        <text x="800" y="110" text-anchor="middle" class="device-ip" font-size="8">...</text>
+
+        <!-- Router / Firewall (erdian) -->
+        <rect x="300" y="180" width="300" height="140" rx="15" fill="rgba(255,165,0,0.15)" stroke="#ffa500" stroke-width="3" filter="url(#glow)"/>
+        <text x="450" y="205" text-anchor="middle" class="zone-label" fill="#ffa500" font-size="16">🔒 ROUTER / FIREWALL</text>
+
+        <!-- Interfazeak -->
+        <rect x="320" y="220" width="80" height="35" rx="5" fill="rgba(0,150,255,0.2)" stroke="#0096ff" stroke-width="1.5"/>
+        <text x="360" y="235" text-anchor="middle" class="device-label" fill="#0096ff" font-size="10">eth0</text>
+        <text x="360" y="248" text-anchor="middle" class="device-ip" font-size="9">WAN</text>
+
+        <rect x="410" y="220" width="80" height="35" rx="5" fill="rgba(255,100,100,0.2)" stroke="#ff6464" stroke-width="1.5"/>
+        <text x="450" y="235" text-anchor="middle" class="device-label" fill="#ff6464" font-size="10">eth1</text>
+        <text x="450" y="248" text-anchor="middle" class="device-ip" font-size="9">DMZ</text>
+
+        <rect x="500" y="220" width="80" height="35" rx="5" fill="rgba(100,255,100,0.2)" stroke="#64ff64" stroke-width="1.5"/>
+        <text x="540" y="235" text-anchor="middle" class="device-label" fill="#64ff64" font-size="10">eth2</text>
+        <text x="540" y="248" text-anchor="middle" class="device-ip" font-size="9">LAN</text>
+
+        <!-- Kateak -->
+        <text x="360" y="275" text-anchor="middle" class="device-ip" font-size="10" fill="#0096ff">PREROUTING</text>
+        <text x="450" y="275" text-anchor="middle" class="device-ip" font-size="10" fill="#ffa500">INPUT/FORWARD</text>
+        <text x="540" y="275" text-anchor="middle" class="device-ip" font-size="10" fill="#64ff64">POSTROUTING</text>
+        <text x="450" y="295" text-anchor="middle" class="device-ip" font-size="10" fill="#ffaa00">OUTPUT</text>
+
+        <!-- DMZ (ezkerrean behean) -->
+        <rect x="50" y="350" width="350" height="130" rx="10" fill="rgba(255,100,100,0.1)" stroke="#ff6464" stroke-width="2" stroke-dasharray="5,5"/>
+        <text x="225" y="370" text-anchor="middle" class="zone-label" fill="#ff6464">🔴 DMZ (192.168.1.0/24)</text>
+
+        <rect x="70" y="385" width="100" height="80" rx="8" fill="rgba(255,100,100,0.15)" stroke="#ff6464" stroke-width="1.5"/>
+        <text x="120" y="405" text-anchor="middle" class="device-label" fill="#ff6464">🌐 Web-Srv</text>
+        <text x="120" y="422" text-anchor="middle" class="device-ip">192.168.1.10</text>
+        <text x="120" y="438" text-anchor="middle" class="device-ip" font-size="8">HTTP:80 HTTPS:443</text>
+        <text x="120" y="452" text-anchor="middle" class="device-ip" font-size="8">Apache/Nginx</text>
+
+        <rect x="185" y="385" width="100" height="80" rx="8" fill="rgba(255,100,100,0.15)" stroke="#ff6464" stroke-width="1.5"/>
+        <text x="235" y="405" text-anchor="middle" class="device-label" fill="#ff6464">📧 Mail-Srv</text>
+        <text x="235" y="422" text-anchor="middle" class="device-ip">192.168.1.20</text>
+        <text x="235" y="438" text-anchor="middle" class="device-ip" font-size="8">SMTP:25 POP:110</text>
+        <text x="235" y="452" text-anchor="middle" class="device-ip" font-size="8">Postfix/Dovecot</text>
+
+        <rect x="300" y="385" width="85" height="80" rx="8" fill="rgba(255,100,100,0.15)" stroke="#ff6464" stroke-width="1.5"/>
+        <text x="342" y="405" text-anchor="middle" class="device-label" fill="#ff6464">🔍 DNS-Int</text>
+        <text x="342" y="422" text-anchor="middle" class="device-ip">192.168.1.30</text>
+        <text x="342" y="438" text-anchor="middle" class="device-ip" font-size="8">DNS:53</text>
+        <text x="342" y="452" text-anchor="middle" class="device-ip" font-size="8">Bind9</text>
+
+        <!-- LAN (eskuinean behean) -->
+        <rect x="430" y="350" width="420" height="130" rx="10" fill="rgba(100,255,100,0.1)" stroke="#64ff64" stroke-width="2" stroke-dasharray="5,5"/>
+        <text x="640" y="370" text-anchor="middle" class="zone-label" fill="#64ff64">🟢 LAN (10.0.0.0/24)</text>
+
+        <rect x="450" y="385" width="90" height="80" rx="8" fill="rgba(100,255,100,0.15)" stroke="#64ff64" stroke-width="1.5"/>
+        <text x="495" y="405" text-anchor="middle" class="device-label" fill="#64ff64">👩 Alice</text>
+        <text x="495" y="422" text-anchor="middle" class="device-ip">10.0.0.11</text>
+        <text x="495" y="438" text-anchor="middle" class="device-ip" font-size="8">Garraiatzailea</text>
+        <text x="495" y="452" text-anchor="middle" class="device-ip" font-size="8">Windows 11</text>
+
+        <rect x="550" y="385" width="90" height="80" rx="8" fill="rgba(100,255,100,0.15)" stroke="#64ff64" stroke-width="1.5"/>
+        <text x="595" y="405" text-anchor="middle" class="device-label" fill="#64ff64">👨 Bob</text>
+        <text x="595" y="422" text-anchor="middle" class="device-ip">10.0.0.12</text>
+        <text x="595" y="438" text-anchor="middle" class="device-ip" font-size="8">Garraiatzailea</text>
+        <text x="595" y="452" text-anchor="middle" class="device-ip" font-size="8">Ubuntu 22.04</text>
+
+        <rect x="650" y="385" width="90" height="80" rx="8" fill="rgba(100,255,100,0.15)" stroke="#64ff64" stroke-width="1.5"/>
+        <text x="695" y="405" text-anchor="middle" class="device-label" fill="#64ff64">👦 Charlie</text>
+        <text x="695" y="422" text-anchor="middle" class="device-ip">10.0.0.13</text>
+        <text x="695" y="438" text-anchor="middle" class="device-ip" font-size="8">Garraiatzailea</text>
+        <text x="695" y="452" text-anchor="middle" class="device-ip" font-size="8">macOS</text>
+
+        <!-- LANeko ZERBITZARIA -->
+        <rect x="750" y="385" width="90" height="80" rx="8" fill="rgba(100,255,100,0.2)" stroke="#64ff64" stroke-width="2"/>
+        <text x="795" y="405" text-anchor="middle" class="device-label" fill="#64ff64" font-weight="bold">🗄️ File-Srv</text>
+        <text x="795" y="422" text-anchor="middle" class="device-ip">10.0.0.20</text>
+        <text x="795" y="438" text-anchor="middle" class="device-ip" font-size="8">SMB:445 SSH:22</text>
+        <text x="795" y="452" text-anchor="middle" class="device-ip" font-size="8">Samba/NAS</text>
+
+        <!-- Konexioak -->
+        <line x1="150" y1="125" x2="360" y2="220" stroke="#0096ff" stroke-width="2" stroke-dasharray="4,4" opacity="0.5"/>
+        <line x1="320" y1="125" x2="360" y2="220" stroke="#0096ff" stroke-width="2" stroke-dasharray="4,4" opacity="0.5"/>
+        <line x1="490" y1="125" x2="360" y2="220" stroke="#0096ff" stroke-width="2" stroke-dasharray="4,4" opacity="0.5"/>
+        <line x1="660" y1="125" x2="360" y2="220" stroke="#ff4444" stroke-width="2" stroke-dasharray="4,4" opacity="0.5"/>
+
+        <line x1="450" y1="255" x2="450" y2="350" stroke="#ff6464" stroke-width="2" stroke-dasharray="4,4" opacity="0.5"/>
+        <line x1="540" y1="255" x2="640" y2="350" stroke="#64ff64" stroke-width="2" stroke-dasharray="4,4" opacity="0.5"/>
+
+        <!-- Pakete animaziorako zirkulua (hasieran ezkutuan) -->
+        <circle id="packet-dot" cx="150" cy="125" r="8" fill="#ffd700" opacity="0" filter="url(#glow)"/>
+        <text id="packet-label" x="150" y="115" text-anchor="middle" fill="#ffd700" font-size="10" opacity="0">📦</text>
+      </svg>
+    </div>
+
+    <!-- Simulazio Emaitza -->
+    <div class="panel" id="simulation-panel" style="display:none;">
+      <h2>📊 Simulazioaren Emaitza</h2>
+      <div id="simulation-content"></div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <!-- Modu Aukeraketa -->
+    <div class="panel">
+      <h2>🎮 Jolasteko Modua</h2>
+      <div class="mode-selector">
+        <button class="mode-btn active" onclick="setMode('challenge')">🏆 Erronka</button>
+        <button class="mode-btn" onclick="setMode('free')">🔓 Aukera Librea</button>
+      </div>
+      <div id="challenge-description" class="tips">
+        <strong>Erronka Modua:</strong> Sistemak helburu bat jartzen du. Editatu scripta, asmatu ea pasatuko den, eta frogatu. Puntuazioa lortuko duzu!
+      </div>
+      <div id="free-description" class="tips" style="display:none;">
+        <strong>Aukera Librea:</strong> Sortu zure paketea, editatu scripta nahi duzun moduan, eta sakatu "Simulatu". Ikusiko duzu zer gertatzen den zure arauetan. Ez dago puntuaziorik, ez dago asmorik - soilik ikasi!
+      </div>
+    </div>
+
+    <!-- Helburua (Erronka moduan) -->
+    <div class="panel" id="challenge-panel">
+      <h2>🎯 Gaurko Helburua</h2>
+      <div id="current-challenge" class="tips" style="background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.3);">
+        <strong>Erronka #<span id="challenge-num">1</span>:</strong> <span id="challenge-text">Kargatzen...</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="loadChallenge()">🔄 Erronka Berria</button>
+      </div>
+    </div>
+
+    <!-- Pakete Sortzailea -->
+    <div class="panel">
+      <h2>📦 Pakete Sortzailea</h2>
+      <div class="packet-form">
+        <div class="form-group">
+          <label>Nondik (Iturburua)</label>
+          <select id="src-device">
+            <optgroup label="WAN / Internet (Publikoak)">
+              <option value="203.0.113.10|PC-Internet">💻 PC-Internet (203.0.113.10)</option>
+              <option value="8.8.8.8|DNS-Google">☁️ DNS-Google (8.8.8.8)</option>
+              <option value="198.51.100.50|Remote-Office">🏢 Remote-Office (198.51.100.50)</option>
+              <option value="203.0.113.99|Hacker-PC">🎭 Hacker-PC (203.0.113.99)</option>
+            </optgroup>
+            <optgroup label="DMZ">
+              <option value="192.168.1.10|Web-Server">🌐 Web-Server (192.168.1.10)</option>
+              <option value="192.168.1.20|Mail-Server">📧 Mail-Server (192.168.1.20)</option>
+              <option value="192.168.1.30|DNS-Internal">🔍 DNS-Internal (192.168.1.30)</option>
+            </optgroup>
+            <optgroup label="LAN">
+              <option value="10.0.0.11|PC-Alice">👩 PC-Alice (10.0.0.11)</option>
+              <option value="10.0.0.12|PC-Bob">👨 PC-Bob (10.0.0.12)</option>
+              <option value="10.0.0.13|PC-Charlie">👦 PC-Charlie (10.0.0.13)</option>
+              <option value="10.0.0.20|File-Server">🗄️ File-Server (10.0.0.20)</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nora (Helmuga)</label>
+          <select id="dst-device">
+            <optgroup label="WAN / Internet (Publikoak)">
+              <option value="203.0.113.10|PC-Internet">💻 PC-Internet (203.0.113.10)</option>
+              <option value="8.8.8.8|DNS-Google">☁️ DNS-Google (8.8.8.8)</option>
+              <option value="198.51.100.50|Remote-Office">🏢 Remote-Office (198.51.100.50)</option>
+              <option value="203.0.113.99|Hacker-PC">🎭 Hacker-PC (203.0.113.99)</option>
+            </optgroup>
+            <optgroup label="DMZ">
+              <option value="192.168.1.10|Web-Server" selected>🌐 Web-Server (192.168.1.10)</option>
+              <option value="192.168.1.20|Mail-Server">📧 Mail-Server (192.168.1.20)</option>
+              <option value="192.168.1.30|DNS-Internal">🔍 DNS-Internal (192.168.1.30)</option>
+            </optgroup>
+            <optgroup label="LAN">
+              <option value="10.0.0.11|PC-Alice">👩 PC-Alice (10.0.0.11)</option>
+              <option value="10.0.0.12|PC-Bob">👨 PC-Bob (10.0.0.12)</option>
+              <option value="10.0.0.13|PC-Charlie">👦 PC-Charlie (10.0.0.13)</option>
+              <option value="10.0.0.20|File-Server">🗄️ File-Server (10.0.0.20)</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Protokoloa</label>
+          <select id="protocol">
+            <option value="tcp">TCP</option>
+            <option value="udp">UDP</option>
+            <option value="icmp">ICMP</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Portua (0 = edozein)</label>
+          <input type="number" id="port" value="80" min="0" max="65535">
+        </div>
+        <div class="form-group">
+          <label>Egoera</label>
+          <select id="state">
+            <option value="NEW">NEW</option>
+            <option value="ESTABLISHED">ESTABLISHED</option>
+            <option value="RELATED">RELATED</option>
+            <option value="INVALID">INVALID</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Flag-ak (TCP)</label>
+          <select id="tcp-flags">
+            <option value="SYN">SYN</option>
+            <option value="ACK">ACK</option>
+            <option value="SYN,ACK">SYN,ACK</option>
+            <option value="FIN">FIN</option>
+            <option value="RST">RST</option>
+            <option value="">-</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-group" id="challenge-buttons">
+        <button class="btn btn-success" onclick="predict(true)">✅ Bai, pasatuko da</button>
+        <button class="btn btn-danger" onclick="predict(false)">❌ Ez, blokeatuko da</button>
+      </div>
+      <div class="btn-group" id="free-buttons" style="display:none;">
+        <button class="btn btn-primary" onclick="simulatePacket()">🚀 Sortu Paketea eta Simulatu</button>
+      </div>
+    </div>
+
+    <!-- Script Editorea -->
+    <div class="panel">
+      <h2>📝 Iptables Scripta</h2>
+      <p style="color:#8892b0; font-size:0.9em; margin-bottom:10px;">
+        <strong>PREROUTING</strong> eta <strong>POSTROUTING</strong> aurrekonfiguratuak daude (NAT).<br>
+        <strong>INPUT, FORWARD, OUTPUT</strong> zuretzat utziak. Editatu behean:
+      </p>
+      <textarea id="iptables-script" spellcheck="false"># =====================================================
+# IPTABLES SCRIPTA - BETE HUTSAK DAUDEN KATEAK
+# =====================================================
+# PREROUTING eta POSTROUTING aurrekonfiguratuak daude
+# NAT erregelak (ezin dira aldatu)
+#
+# ZURE LANA: INPUT, FORWARD eta OUTPUT kateak bete
+# =====================================================
+
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT DROP [0:0]
+
+# -----------------------------------------------------
+# INPUT: Router/Firewall bera helmuga denean
+# -----------------------------------------------------
+# Adibideak:
+# iptables -A INPUT -i eth0 -p tcp --dport 22 -j ACCEPT
+# iptables -A INPUT -i eth1 -p udp --dport 53 -j ACCEPT
+
+
+# -----------------------------------------------------
+# FORWARD: Saretik sartara pasatzean
+# -----------------------------------------------------
+# Adibideak:
+# iptables -A FORWARD -i eth0 -o eth1 -p tcp --dport 80 -d 192.168.1.10 -j ACCEPT
+# iptables -A FORWARD -i eth2 -o eth0 -p tcp --dport 443 -j ACCEPT
+
+
+# -----------------------------------------------------
+# OUTPUT: Router/Firewall-etik kanpora
+# -----------------------------------------------------
+# Adibideak:
+# iptables -A OUTPUT -o eth0 -p udp --dport 53 -j ACCEPT
+# iptables -A OUTPUT -o eth1 -p tcp --dport 25 -j ACCEPT
+
+
+COMMIT
+
+*nat
+:PREROUTING ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+
+# NAT aurrekonfigurazioa (EZ EZABA EZTA ALDATU)
+-A PREROUTING -i eth0 -p tcp --dport 8080 -j DNAT --to-destination 192.168.1.10:80
+-A POSTROUTING -o eth0 -j MASQUERADE
+
+COMMIT
+</textarea>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="resetScript()">🔄 Scripta Berrezarri</button>
+        <button class="btn btn-success" onclick="simulatePacket()">▶️ Paketea Bidali</button>
+      </div>
+    </div>
+
+    <!-- Puntuazioa -->
+    <div class="panel" id="score-panel" style="display:none;">
+      <h2>🏆 Puntuazioa</h2>
+      <div class="score-board">
+        <div class="score-item">
+          <div class="score-value" id="total-score">0</div>
+          <div class="score-label">Puntuazioa</div>
+        </div>
+        <div class="score-item">
+          <div class="score-value" id="correct-predictions">0</div>
+          <div class="score-label">Asmatzeak</div>
+        </div>
+        <div class="score-item">
+          <div class="score-value" id="total-challenges">0</div>
+          <div class="score-label">Erronkak</div>
+        </div>
+      </div>
+      <div class="error-counters" id="error-counters">
+        <div class="counter good">PREROUTING: ✓</div>
+        <div class="counter">INPUT: 0 akats</div>
+        <div class="counter">FORWARD: 0 akats</div>
+        <div class="counter">OUTPUT: 0 akats</div>
+        <div class="counter good">POSTROUTING: ✓</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== DATUAK ====================
+const DEVICES = {
+  // WAN - IP Publikoak
+  '203.0.113.10': { name: 'PC-Internet', zone: 'wan', type: 'pc', icon: '💻' },
+  '8.8.8.8': { name: 'DNS-Google', zone: 'wan', type: 'server', icon: '☁️' },
+  '198.51.100.50': { name: 'Remote-Office', zone: 'wan', type: 'pc', icon: '🏢' },
+  '203.0.113.99': { name: 'Hacker-PC', zone: 'wan', type: 'pc', icon: '🎭' },
+  // DMZ - IP Pribatuak
+  '192.168.1.10': { name: 'Web-Server', zone: 'dmz', type: 'server', icon: '🌐', ports: [80, 443] },
+  '192.168.1.20': { name: 'Mail-Server', zone: 'dmz', type: 'server', icon: '📧', ports: [25, 110] },
+  '192.168.1.30': { name: 'DNS-Internal', zone: 'dmz', type: 'server', icon: '🔍', ports: [53] },
+  // LAN - IP Pribatuak
+  '10.0.0.11': { name: 'PC-Alice', zone: 'lan', type: 'pc', icon: '👩' },
+  '10.0.0.12': { name: 'PC-Bob', zone: 'lan', type: 'pc', icon: '👨' },
+  '10.0.0.13': { name: 'PC-Charlie', zone: 'lan', type: 'pc', icon: '👦' },
+  '10.0.0.20': { name: 'File-Server', zone: 'lan', type: 'server', icon: '🗄️', ports: [445, 22] }
+};
+
+const ZONES = {
+  wan: { name: 'WAN', interface: 'eth0', network: ['203.0.113.0/24', '8.8.8.8', '198.51.100.0/24'] },
+  dmz: { name: 'DMZ', interface: 'eth1', network: '192.168.1.0/24' },
+  lan: { name: 'LAN', interface: 'eth2', network: '10.0.0.0/24' }
+};
+
+const CHALLENGES = [
+  {
+    id: 1,
+    text: "PC-Internet-ek (203.0.113.10) Web-Server-era (192.168.1.10) HTTP eskaera bat bidali nahi du. Konfiguratu arauak!",
+    setup: () => {
+      setPacket('203.0.113.10', '192.168.1.10', 'tcp', 80, 'NEW', 'SYN');
+    },
+    expected: true,
+    requiredChain: 'FORWARD',
+    hint: "WAN → DMZ pasatzen da FORWARD katean. eth0-tik eth1-ra."
+  },
+  {
+    id: 2,
+    text: "PC-Alice-k (10.0.0.11) Interneteko DNS-Google-ri (8.8.8.8) kontsulta bat egin nahi dio UDP 53 portuan.",
+    setup: () => {
+      setPacket('10.0.0.11', '8.8.8.8', 'udp', 53, 'NEW', '');
+    },
+    expected: true,
+    requiredChain: 'FORWARD',
+    hint: "LAN → WAN pasatzen da FORWARD katean. eth2-tik eth0-ra."
+  },
+  {
+    id: 3,
+    text: "Hacker-PC-k (203.0.113.99) LANeko File-Server-era (10.0.0.20) SSH konexio bat egin nahi du. Blokeatu beharko litzateke!",
+    setup: () => {
+      setPacket('203.0.113.99', '10.0.0.20', 'tcp', 22, 'NEW', 'SYN');
+    },
+    expected: false,
+    requiredChain: 'FORWARD',
+    hint: "WAN → LAN ez litzateke baimendu behar segurtasun politikagatik."
+  },
+  {
+    id: 4,
+    text: "PC-Bob-ek (10.0.0.12) DMZko Mail-Server-era (192.168.1.20) SMTP mezu bat bidali nahi du.",
+    setup: () => {
+      setPacket('10.0.0.12', '192.168.1.20', 'tcp', 25, 'NEW', 'SYN');
+    },
+    expected: true,
+    requiredChain: 'FORWARD',
+    hint: "LAN → DMZ pasatzen da FORWARD katean."
+  },
+  {
+    id: 5,
+    text: "Remote-Office-k (198.51.100.50) Router/Firewall bera kudeatzeko SSH nahi du (routerren IP publikoa: 203.0.113.1).",
+    setup: () => {
+      setPacket('198.51.100.50', '203.0.113.1', 'tcp', 22, 'NEW', 'SYN');
+    },
+    expected: true,
+    requiredChain: 'INPUT',
+    hint: "Helmuga Router/Firewall bera denean, INPUT katea erabiltzen da."
+  },
+  {
+    id: 6,
+    text: "PC-Charlie-k (10.0.0.13) LANeko File-Server-eko (10.0.0.20) fitxategi partekatua atzitu nahi du SMB bidez.",
+    setup: () => {
+      setPacket('10.0.0.13', '10.0.0.20', 'tcp', 445, 'NEW', 'SYN');
+    },
+    expected: true,
+    requiredChain: 'FORWARD',
+    hint: "LAN → LAN? Ez, berez ez da routerretik pasatzen... baina simulazioan FORWARD erabiltzen dugu."
+  },
+  {
+    id: 7,
+    text: "PC-Internet-ek (203.0.113.10) DMZko DNS-Internal-a (192.168.1.30) erabili nahi du DNS kontsultetarako.",
+    setup: () => {
+      setPacket('203.0.113.10', '192.168.1.30', 'udp', 53, 'NEW', '');
+    },
+    expected: true,
+    requiredChain: 'FORWARD',
+    hint: "WAN → DMZ. UDP 53."
+  },
+  {
+    id: 8,
+    text: "Router/Firewall-ak bera DNS-Google-ri (8.8.8.8) kontsulta bat egin nahi dio sistema eguneraketak egiteko.",
+    setup: () => {
+      setPacket('203.0.113.1', '8.8.8.8', 'udp', 53, 'NEW', '');
+    },
+    expected: true,
+    requiredChain: 'OUTPUT',
+    hint: "Router/Firewall bera iturburua denean, OUTPUT katea erabiltzen da."
+  },
+  {
+    id: 9,
+    text: "Hacker-PC-k (203.0.113.99) Router/Firewall-aren 80 portuan web zerbitzari bat bilatu du. Blokeatu!",
+    setup: () => {
+      setPacket('203.0.113.99', '203.0.113.1', 'tcp', 80, 'NEW', 'SYN');
+    },
+    expected: false,
+    requiredChain: 'INPUT',
+    hint: "Router/Firewall bera helmuga, INPUT katea. Ez litzateke 80 ireki behar kanpotik."
+  },
+  {
+    id: 10,
+    text: "PC-Alice-k (10.0.0.11) Remote-Office-ra (198.51.100.50) VPN konexio bat egin nahi du UDP 1194 portuan.",
+    setup: () => {
+      setPacket('10.0.0.11', '198.51.100.50', 'udp', 1194, 'NEW', '');
+    },
+    expected: true,
+    requiredChain: 'FORWARD',
+    hint: "LAN → WAN. UDP 1194 (OpenVPN)."
+  }
+];
+
+// ==================== EGOERA ====================
+let currentMode = 'challenge';
+let currentChallenge = null;
+let userPrediction = null;
+let totalScore = 0;
+let correctPredictions = 0;
+let totalChallenges = 0;
+let errorCounts = { INPUT: 0, FORWARD: 0, OUTPUT: 0 };
+let currentPacketPath = [];
+
+// ==================== FUNTZIOAK ====================
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+
+  if (mode === 'challenge') {
+    document.getElementById('challenge-description').style.display = 'block';
+    document.getElementById('free-description').style.display = 'none';
+    document.getElementById('challenge-panel').style.display = 'block';
+    document.getElementById('challenge-buttons').style.display = 'flex';
+    document.getElementById('free-buttons').style.display = 'none';
+    document.getElementById('score-panel').style.display = 'block';
+    loadChallenge();
+  } else {
+    document.getElementById('challenge-description').style.display = 'none';
+    document.getElementById('free-description').style.display = 'block';
+    document.getElementById('challenge-panel').style.display = 'none';
+    document.getElementById('challenge-buttons').style.display = 'none';
+    document.getElementById('free-buttons').style.display = 'flex';
+    document.getElementById('score-panel').style.display = 'none';
+    document.getElementById('simulation-panel').style.display = 'none';
+  }
+}
+
+function setPacket(src, dst, proto, port, state, flags) {
+  // Aukeratu select-etan
+  const srcSelect = document.getElementById('src-device');
+  const dstSelect = document.getElementById('dst-device');
+
+  for (let opt of srcSelect.options) {
+    if (opt.value.startsWith(src + '|')) opt.selected = true;
+  }
+  for (let opt of dstSelect.options) {
+    if (opt.value.startsWith(dst + '|')) opt.selected = true;
+  }
+
+  document.getElementById('protocol').value = proto;
+  document.getElementById('port').value = port;
+  document.getElementById('state').value = state;
+  document.getElementById('tcp-flags').value = flags;
+}
+
+function loadChallenge() {
+  const randomIdx = Math.floor(Math.random() * CHALLENGES.length);
+  currentChallenge = CHALLENGES[randomIdx];
+  document.getElementById('challenge-num').textContent = currentChallenge.id;
+  document.getElementById('challenge-text').textContent = currentChallenge.text;
+  currentChallenge.setup();
+  userPrediction = null;
+  document.getElementById('simulation-panel').style.display = 'none';
+}
+
+function predict(willPass) {
+  userPrediction = willPass;
+  simulatePacket();
+}
+
+function resetScript() {
+  const defaultScript = `# =====================================================
+# IPTABLES SCRIPTA - BETE HUTSAK DAUDEN KATEAK
+# =====================================================
+# PREROUTING eta POSTROUTING aurrekonfiguratuak daude
+# NAT erregelak (ezin dira aldatu)
+#
+# ZURE LANA: INPUT, FORWARD eta OUTPUT kateak bete
+# =====================================================
+
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT DROP [0:0]
+
+# -----------------------------------------------------
+# INPUT: Router/Firewall bera helmuga denean
+# -----------------------------------------------------
+# Adibideak:
+# iptables -A INPUT -i eth0 -p tcp --dport 22 -j ACCEPT
+# iptables -A INPUT -i eth1 -p udp --dport 53 -j ACCEPT
+
+
+# -----------------------------------------------------
+# FORWARD: Saretik sartara pasatzean
+# -----------------------------------------------------
+# Adibideak:
+# iptables -A FORWARD -i eth0 -o eth1 -p tcp --dport 80 -d 192.168.1.10 -j ACCEPT
+# iptables -A FORWARD -i eth2 -o eth0 -p tcp --dport 443 -j ACCEPT
+
+
+# -----------------------------------------------------
+# OUTPUT: Router/Firewall-etik kanpora
+# -----------------------------------------------------
+# Adibideak:
+# iptables -A OUTPUT -o eth0 -p udp --dport 53 -j ACCEPT
+# iptables -A OUTPUT -o eth1 -p tcp --dport 25 -j ACCEPT
+
+
+COMMIT
+
+*nat
+:PREROUTING ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+
+# NAT aurrekonfigurazioa (EZ EZABA EZTA ALDATU)
+-A PREROUTING -i eth0 -p tcp --dport 8080 -j DNAT --to-destination 192.168.1.10:80
+-A POSTROUTING -o eth0 -j MASQUERADE
+
+COMMIT`;
+  document.getElementById('iptables-script').value = defaultScript;
+}
+
+// ==================== IPTABLES PARSER ====================
+function parseScript(scriptText) {
+  const rules = {
+    INPUT: [],
+    FORWARD: [],
+    OUTPUT: [],
+    PREROUTING: [
+      { action: 'ACCEPT', details: 'DNAT: 8080 → 192.168.1.10:80', line: '-A PREROUTING -i eth0 -p tcp --dport 8080 -j DNAT --to-destination 192.168.1.10:80' }
+    ],
+    POSTROUTING: [
+      { action: 'ACCEPT', details: 'MASQUERADE', line: '-A POSTROUTING -o eth0 -j MASQUERADE' }
+    ]
+  };
+
+  const lines = scriptText.split('\n');
+  let inFilter = false;
+
+  for (let line of lines) {
+    line = line.trim();
+    if (line.startsWith('*filter')) inFilter = true;
+    if (line.startsWith('*nat')) inFilter = false;
+    if (line.startsWith('COMMIT')) inFilter = false;
+
+    if (!inFilter) continue;
+    if (!line.startsWith('-A ')) continue;
+
+    const chainMatch = line.match(/-A (INPUT|FORWARD|OUTPUT)/);
+    if (!chainMatch) continue;
+
+    const chain = chainMatch[1];
+    const rule = { line: line, raw: line };
+
+    // Parseatu araua
+    if (line.includes('-j ACCEPT')) rule.action = 'ACCEPT';
+    else if (line.includes('-j DROP')) rule.action = 'DROP';
+    else if (line.includes('-j REJECT')) rule.action = 'REJECT';
+    else if (line.includes('-j LOG')) rule.action = 'LOG';
+    else rule.action = 'UNKNOWN';
+
+    // Parseatu baldintzak
+    const inMatch = line.match(/-i (\w+)/);
+    const outMatch = line.match(/-o (\w+)/);
+    const protoMatch = line.match(/-p (\w+)/);
+    const dportMatch = line.match(/--dport (\d+)/);
+    const sportMatch = line.match(/--sport (\d+)/);
+    const srcMatch = line.match(/-s ([\d./]+)/);
+    const dstMatch = line.match(/-d ([\d./]+)/);
+    const stateMatch = line.match(/--state (\w+)/);
+
+    rule.inInterface = inMatch ? inMatch[1] : null;
+    rule.outInterface = outMatch ? outMatch[1] : null;
+    rule.protocol = protoMatch ? protoMatch[1] : null;
+    rule.dport = dportMatch ? parseInt(dportMatch[1]) : null;
+    rule.sport = sportMatch ? parseInt(sportMatch[1]) : null;
+    rule.src = srcMatch ? srcMatch[1] : null;
+    rule.dst = dstMatch ? dstMatch[1] : null;
+    rule.state = stateMatch ? stateMatch[1] : null;
+
+    rules[chain].push(rule);
+  }
+
+  return rules;
+}
+
+function ipInCidr(ip, cidr) {
+  if (!cidr) return false;
+  if (ip === cidr) return true;
+  if (!cidr.includes('/')) return ip === cidr;
+
+  const [range, bits] = cidr.split('/');
+  const mask = parseInt(bits);
+  const ipParts = ip.split('.').map(Number);
+  const rangeParts = range.split('.').map(Number);
+
+  const ipInt = (ipParts[0] << 24) | (ipParts[1] << 16) | (ipParts[2] << 8) | ipParts[3];
+  const rangeInt = (rangeParts[0] << 24) | (rangeParts[1] << 16) | (rangeParts[2] << 8) | rangeParts[3];
+  const maskInt = ~((1 << (32 - mask)) - 1);
+
+  return (ipInt & maskInt) === (rangeInt & maskInt);
+}
+
+function matchesRule(packet, rule, chain) {
+  // Protokoloa
+  if (rule.protocol && rule.protocol !== packet.protocol) return false;
+
+  // Portua
+  if (rule.dport !== null && rule.dport !== packet.dport) return false;
+  if (rule.sport !== null && rule.sport !== packet.sport) return false;
+
+  // IPak
+  if (rule.src && !ipInCidr(packet.src, rule.src)) return false;
+  if (rule.dst && !ipInCidr(packet.dst, rule.dst)) return false;
+
+  // Interfazeak
+  if (chain === 'INPUT' && rule.inInterface && rule.inInterface !== packet.inInterface) return false;
+  if (chain === 'OUTPUT' && rule.outInterface && rule.outInterface !== packet.outInterface) return false;
+  if (chain === 'FORWARD') {
+    if (rule.inInterface && rule.inInterface !== packet.inInterface) return false;
+    if (rule.outInterface && rule.outInterface !== packet.outInterface) return false;
+  }
+
+  return true;
+}
+
+function determinePath(src, dst) {
+  const srcDev = DEVICES[src] || { zone: 'unknown' };
+  const dstDev = DEVICES[dst] || { zone: 'unknown' };
+
+  // Router/Firewall-en IPak
+  const routerIps = ['203.0.113.1', '192.168.1.1', '10.0.0.1'];
+  const isRouter = routerIps.includes(dst);
+
+  if (isRouter) {
+    return {
+      chains: ['PREROUTING', 'INPUT', 'OUTPUT', 'POSTROUTING'],
+      inInterface: getInterface(srcDev.zone),
+      outInterface: null,
+      description: 'Router/Firewall bera helmuga'
+    };
+  }
+
+  if (srcDev.zone === dstDev.zone) {
+    // Zona berean - teorian ez da routerretik pasatzen, baina simulazioan FORWARD erabiltzen dugu
+    return {
+      chains: ['PREROUTING', 'FORWARD', 'POSTROUTING'],
+      inInterface: getInterface(srcDev.zone),
+      outInterface: getInterface(dstDev.zone),
+      description: `${srcDev.zone.toUpperCase()} → ${dstDev.zone.toUpperCase()} (zona berean)`
+    };
+  }
+
+  return {
+    chains: ['PREROUTING', 'FORWARD', 'POSTROUTING'],
+    inInterface: getInterface(srcDev.zone),
+    outInterface: getInterface(dstDev.zone),
+    description: `${srcDev.zone.toUpperCase()} → ${dstDev.zone.toUpperCase()}`
+  };
+}
+
+function getInterface(zone) {
+  if (zone === 'wan') return 'eth0';
+  if (zone === 'dmz') return 'eth1';
+  if (zone === 'lan') return 'eth2';
+  return 'eth0';
+}
+
+// ==================== SIMULAZIOA ====================
+async function simulatePacket() {
+  const srcVal = document.getElementById('src-device').value.split('|');
+  const dstVal = document.getElementById('dst-device').value.split('|');
+
+  const packet = {
+    src: srcVal[0],
+    dst: dstVal[0],
+    srcName: srcVal[1],
+    dstName: dstVal[1],
+    protocol: document.getElementById('protocol').value,
+    dport: parseInt(document.getElementById('port').value) || 0,
+    sport: 12345,
+    state: document.getElementById('state').value,
+    flags: document.getElementById('tcp-flags').value
+  };
+
+  const path = determinePath(packet.src, packet.dst);
+  packet.inInterface = path.inInterface;
+  packet.outInterface = path.outInterface;
+
+  const rules = parseScript(document.getElementById('iptables-script').value);
+
+  let result = {
+    passed: false,
+    blockedAt: null,
+    blockedBy: null,
+    log: [],
+    path: path,
+    packet: packet
+  };
+
+  // Simulatu kateak
+  for (const chain of path.chains) {
+    if (chain === 'PREROUTING' || chain === 'POSTROUTING') {
+      // NAT kateak - defektuz ACCEPT (ez dugu blokeatzen simulazioan)
+      result.log.push({
+        chain: chain,
+        action: 'ACCEPT',
+        matched: false,
+        details: rules[chain][0] ? rules[chain][0].details : 'NAT passthrough',
+        line: rules[chain][0] ? rules[chain][0].line : ''
+      });
+      continue;
+    }
+
+    let matched = false;
+    for (const rule of rules[chain]) {
+      if (matchesRule(packet, rule, chain)) {
+        matched = true;
+        result.log.push({
+          chain: chain,
+          action: rule.action,
+          matched: true,
+          rule: rule,
+          details: `Bat egin: ${rule.line.substring(0, 60)}...`
+        });
+
+        if (rule.action === 'DROP' || rule.action === 'REJECT') {
+          result.blockedAt = chain;
+          result.blockedBy = rule;
+          break;
+        } else if (rule.action === 'ACCEPT') {
+          // Jarraitu
+        }
+        break; // Lehenengo bat egiten duen araua
+      }
+    }
+
+    if (!matched) {
+      // Ez du araurik bat egin - politika defektuzkoa (DROP)
+      result.log.push({
+        chain: chain,
+        action: 'DROP',
+        matched: false,
+        details: `Ez du araurik bat egin - Politika defektuzkoa: DROP`,
+        line: ''
+      });
+      result.blockedAt = chain;
+      result.blockedBy = null;
+      break;
+    }
+
+    if (result.blockedAt) break;
+  }
+
+  if (!result.blockedAt) {
+    result.passed = true;
+  }
+
+  // Animazioa eta emaitza erakutsi
+  await animatePacket(packet, path, result);
+  showResult(result);
+
+  // Erronka moduan puntuazioa kalkulatu
+  if (currentMode === 'challenge' && currentChallenge) {
+    calculateScore(result);
+  }
+}
+
+async function animatePacket(packet, path, result) {
+  const svg = document.getElementById('topology-svg');
+  const dot = document.getElementById('packet-dot');
+  const label = document.getElementById('packet-label');
+
+  // Posizioak
+  const positions = {
+    '203.0.113.10': { x: 150, y: 125 },
+    '8.8.8.8': { x: 320, y: 125 },
+    '198.51.100.50': { x: 490, y: 125 },
+    '203.0.113.99': { x: 660, y: 125 },
+    '192.168.1.10': { x: 120, y: 385 },
+    '192.168.1.20': { x: 235, y: 385 },
+    '192.168.1.30': { x: 342, y: 385 },
+    '10.0.0.11': { x: 495, y: 385 },
+    '10.0.0.12': { x: 595, y: 385 },
+    '10.0.0.13': { x: 695, y: 385 },
+    '10.0.0.20': { x: 795, y: 385 },
+    'router': { x: 450, y: 250 }
+  };
+
+  const start = positions[packet.src] || positions['203.0.113.10'];
+  const end = positions[packet.dst] || positions['192.168.1.10'];
+  const router = positions['router'];
+
+  dot.setAttribute('opacity', '1');
+  label.setAttribute('opacity', '1');
+  dot.setAttribute('cx', start.x);
+  dot.setAttribute('cy', start.y);
+  label.setAttribute('x', start.x);
+  label.setAttribute('y', start.y - 10);
+
+  // Mugitu routerrera
+  await animateTo(dot, label, router.x, router.y, 1000);
+
+  // Kateak koloreztatu
+  const chainElements = document.querySelectorAll('.chain-highlight');
+  chainElements.forEach(el => el.remove());
+
+  for (const logEntry of result.log) {
+    const color = logEntry.action === 'ACCEPT' ? '#00ff88' : (logEntry.action === 'DROP' || logEntry.action === 'REJECT') ? '#ff4444' : '#666';
+
+    // SVG-n katea nabarmendu
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', '300');
+    rect.setAttribute('y', '180');
+    rect.setAttribute('width', '300');
+    rect.setAttribute('height', '140');
+    rect.setAttribute('fill', color);
+    rect.setAttribute('opacity', '0.2');
+    rect.setAttribute('class', 'chain-highlight');
+    svg.insertBefore(rect, dot);
+
+    await new Promise(r => setTimeout(r, 500));
+    rect.remove();
+
+    if (logEntry.action === 'DROP' || logEntry.action === 'REJECT') {
+      dot.setAttribute('fill', '#ff4444');
+      break;
+    }
+  }
+
+  if (result.passed) {
+    dot.setAttribute('fill', '#00ff88');
+    await animateTo(dot, label, end.x, end.y, 1000);
+  }
+
+  await new Promise(r => setTimeout(r, 1000));
+  dot.setAttribute('opacity', '0');
+  label.setAttribute('opacity', '0');
+  dot.setAttribute('fill', '#ffd700');
+}
+
+function animateTo(dot, label, x, y, duration) {
+  return new Promise(resolve => {
+    const startX = parseFloat(dot.getAttribute('cx'));
+    const startY = parseFloat(dot.getAttribute('cy'));
+    const startTime = performance.now();
+
+    function step(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      const currentX = startX + (x - startX) * progress;
+      const currentY = startY + (y - startY) * progress;
+
+      dot.setAttribute('cx', currentX);
+      dot.setAttribute('cy', currentY);
+      label.setAttribute('x', currentX);
+      label.setAttribute('y', currentY - 10);
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        resolve();
+      }
+    }
+
+    requestAnimationFrame(step);
+  });
+}
+
+function showResult(result) {
+  const panel = document.getElementById('simulation-panel');
+  const content = document.getElementById('simulation-content');
+
+  let html = `
+    <div style="margin-bottom:15px;">
+      <strong>📦 Paketea:</strong> ${result.packet.srcName} (${result.packet.src}) → ${result.packet.dstName} (${result.packet.dst})<br>
+      <strong>📝 Protokoloa:</strong> ${result.packet.protocol.toUpperCase()} ${result.packet.dport ? result.packet.dport : ''} | <strong>Egoera:</strong> ${result.packet.state}
+    </div>
+    <div style="margin-bottom:15px; color:${result.passed ? '#00ff88' : '#ff4444'}; font-size:1.2em; font-weight:bold;">
+      ${result.passed ? '✅ PAKETEA PASATU DA!' : '❌ PAKETEA BLOKEATU DA!'}
+    </div>
+    <div class="chain-log">
+  `;
+
+  for (const log of result.log) {
+    const colorClass = log.action === 'ACCEPT' ? 'log-accept' : (log.action === 'DROP' || log.action === 'REJECT') ? 'log-drop' : 'log-nomatch';
+    const icon = log.action === 'ACCEPT' ? '✅' : (log.action === 'DROP' || log.action === 'REJECT') ? '🔴' : '⚪';
+    html += `<div class="${colorClass}">${icon} <strong>[${log.chain}]</strong> ${log.action}`;
+    if (log.matched && log.rule) {
+      html += ` ← Bat egin: ${log.rule.line}`;
+    } else if (!log.matched && log.chain !== 'PREROUTING' && log.chain !== 'POSTROUTING') {
+      html += ` ← Ez du araurik bat egin (politika defektuzkoa)`;
+    } else if (log.details) {
+      html += ` ← ${log.details}`;
+    }
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+
+  if (!result.passed && result.blockedAt) {
+    html += `
+      <div class="tips" style="margin-top:15px;">
+        <strong>💡 Analisia:</strong> Paketea <strong>${result.blockedAt}</strong> katean blokeatu da.
+        ${result.blockedBy ? `<br>Araua: <code>${result.blockedBy.line}</code>` : '<br>Ez duzu araurik gehitu kate horretan, beraz politika defektuzkoa (DROP) aplikatu da.'}
+      </div>
+    `;
+  }
+
+  if (result.passed) {
+    html += `
+      <div class="tips" style="margin-top:15px; background:rgba(0,255,136,0.1); border-color:rgba(0,255,136,0.3);">
+        <strong>🎉 Zorionak!</strong> Paketea zuzenki pasatu da suhesiaren arau guztiak.
+      </div>
+    `;
+  }
+
+  content.innerHTML = html;
+  panel.style.display = 'block';
+  panel.className = 'panel ' + (result.passed ? 'success' : 'fail');
+}
+
+function calculateScore(result) {
+  if (!currentChallenge) return;
+
+  totalChallenges++;
+  let points = 0;
+  let feedback = [];
+
+  // Aurreikuspena
+  if (userPrediction !== null) {
+    const predictionCorrect = (userPrediction === result.passed);
+    if (predictionCorrect) {
+      points += 10;
+      correctPredictions++;
+      feedback.push("✅ Asmatu duzu ea pasatuko zen! (+10)");
+    } else {
+      feedback.push("❌ Okertu duzu aurreikuspena. Ikasi emaitzatik!");
+    }
+  }
+
+  // Helburua bete?
+  const challengeMet = (result.passed === currentChallenge.expected);
+  if (challengeMet) {
+    points += 20;
+    feedback.push("✅ Helburua bete da! (+20)");
+  } else {
+    feedback.push(`❌ Helburua EZ da bete. ${currentChallenge.hint}`);
+    // Akats kontagailua igo
+    if (currentChallenge.requiredChain) {
+      errorCounts[currentChallenge.requiredChain]++;
+    }
+  }
+
+  totalScore += points;
+
+  // Eguneratu pantaila
+  document.getElementById('total-score').textContent = totalScore;
+  document.getElementById('correct-predictions').textContent = correctPredictions;
+  document.getElementById('total-challenges').textContent = totalChallenges;
+
+  const countersDiv = document.getElementById('error-counters');
+  countersDiv.innerHTML = `
+    <div class="counter good">PREROUTING: ✓</div>
+    <div class="counter ${errorCounts.INPUT > 0 ? '' : 'good'}">INPUT: ${errorCounts.INPUT} akats</div>
+    <div class="counter ${errorCounts.FORWARD > 0 ? '' : 'good'}">FORWARD: ${errorCounts.FORWARD} akats</div>
+    <div class="counter ${errorCounts.OUTPUT > 0 ? '' : 'good'}">OUTPUT: ${errorCounts.OUTPUT} akats</div>
+    <div class="counter good">POSTROUTING: ✓</div>
+  `;
+
+  // Gehitu puntuazioa emaitzan
+  const content = document.getElementById('simulation-content');
+  content.innerHTML += `
+    <div style="margin-top:20px; padding-top:15px; border-top:2px solid rgba(255,255,255,0.1);">
+      <h3 style="color:#ffd700;">🏆 Puntuazioa: +${points} puntu</h3>
+      ${feedback.map(f => `<div style="margin:5px 0;">${f}</div>`).join('')}
+      <div style="margin-top:10px; color:#8892b0;">
+        <strong>Akats kontagailuak:</strong> INPUT: ${errorCounts.INPUT}, FORWARD: ${errorCounts.FORWARD}, OUTPUT: ${errorCounts.OUTPUT}
+      </div>
+    </div>
+  `;
+}
+
+// ==================== HASIERA ====================
+window.onload = function() {
+  loadChallenge();
+};
+</script>
+
+</body>
+</html>
