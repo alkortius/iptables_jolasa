@@ -134,9 +134,6 @@ function ruleToCmd(rule){
   if(rule.dport!=='*')s+=' --dport '+rule.dport;
   if(rule.cs&&rule.cs.length)s+=' -m conntrack --ctstate '+rule.cs.join(',');
   s+=' -j '+rule.target;
-  if(rule.target==='DNAT'&&rule.toAddr)s+=' --to-destination '+rule.toAddr;
-  if(rule.target==='SNAT'&&rule.toAddr)s+=' --to-source '+rule.toAddr;
-  if(rule.target==='REDIRECT'&&rule.toAddr)s+=' --to-port '+rule.toAddr;
   return s;
 }
 function simulate(pkt,rules){
@@ -148,9 +145,8 @@ function simulate(pkt,rules){
     const cr=rules.filter(r=>r.chain===chain&&r.table===table&&!r.isPolicy);
     let matched=null;
     for(const rule of cr){if(matchRule(pkt,rule)){matched=rule;break;}}
-    var natInfo='';
-    if(matched.toAddr){
-      steps.push({chain,table,rule:matched,verdict:matched.target,natInfo:natInfo});
+    if(matched){
+      steps.push({chain,table,rule:matched,verdict:matched.target});
       if(matched.target==='DROP'||matched.target==='REJECT')return{steps,final:'DROP'};
     }else if(table==='filter'){
       const p=pol[chain]||'DROP';
@@ -181,7 +177,7 @@ let S={
   rules:DEFAULT_RULES.map(r=>({...r,cs:[...r.cs]})),
   pkt:{src:'WAN',dst:'DMZ',proto:'tcp',dport:'80',ctstate:'NEW'},
   result:null,tab:'FORWARD',showAdd:false,
-  nr:{chain:'FORWARD',inIf:'*',outIf:'*',proto:'any',dport:'*',cs:[],target:'ACCEPT',toAddr:''},
+  nr:{chain:'FORWARD',inIf:'*',outIf:'*',proto:'any',dport:'*',cs:[],target:'ACCEPT'},
   nid:18
 };
 
@@ -298,11 +294,10 @@ function render(){
         +'<div class="step-verdict mono '+vc+'">'+vd+'</div></div>';
     }).join('');
     var acc=result.final==='ACCEPT';
-    var natBadge = step.natInfo ? '<span ...>' + step.natInfo + '</span>' : '';
     var verdictHtml='<div class="verdict-box '+(acc?'verdict-accept':'verdict-drop')+'">'
       +'<span class="verdict-icon">'+(acc?'✅':'❌')+'</span>'
       +'<div><div class="verdict-text" style="color:'+(acc?'#4ade80':'#f87171')+'">Paketea '+(acc?'ONARTUTA':'BLOKEATU')+'</div>'
-      +'<div class="verdict-sub">'+p.src+' → '+p.dst+' | '+p.proto+(p.dport!=='*'?':'+p.dport:'')+' | '+p.ctstate+'| '+vd.natBadge+'</div></div></div>';
+      +'<div class="verdict-sub">'+p.src+' → '+p.dst+' | '+p.proto+(p.dport!=='*'?':'+p.dport:'')+' | '+p.ctstate+'</div></div></div>';
     simHtml='<div class="card"><div class="lbl">Ibilbide-azterketa</div>'+pktLine+'<div class="steps">'+stepsHtml+'</div>'+verdictHtml+'</div>';
   }
 
@@ -318,9 +313,6 @@ function render(){
   var nrTargets=targetsFor(nr.chain);
   var nrTargetOpts=nrTargets.map(function(t){return'<option value="'+t+'"'+(nr.target===t?' selected':'')+'>'+t+'</option>';}).join('');
   var chainOpts=['PREROUTING','INPUT','FORWARD','OUTPUT','POSTROUTING'].map(function(c){return'<option value="'+c+'"'+(nr.chain===c?' selected':'')+'>'+c+'</option>';}).join('');
-  var toAddrMeta = { DNAT:{...}, SNAT:{...}, REDIRECT:{...} };
-  var needsAddr = isNat && toAddrMeta[nr.target];
-  var toAddrHtml = needsAddr ? '<div>...<input>...</div>' : '';
   var csChecks=['NEW','ESTABLISHED','RELATED','INVALID'].map(function(s){
     return'<label class="cs-label"><input type="checkbox" '+(nr.cs.includes(s)?'checked':'')+' onchange="toggleCs(\''+s+'\')"> '+s+'</label>';
   }).join('');
@@ -391,14 +383,13 @@ function setNrChain(chain){
   var targets=targetsFor(chain);
   S.nr.chain=chain;
   S.nr.target=targets[0];
-  S.nr.toAddr='';
   if(NAT_CHAINS.includes(chain))S.nr.cs=[];
   render();
 }
 function toggleCs(s){var cs=S.nr.cs;var i=cs.indexOf(s);if(i>=0)cs.splice(i,1);else cs.push(s);render();}
 function addRule(){
   var table=tableFor(S.nr.chain);
-  S.rules.push(Object.assign({},S.nr,{table:table,id:S.nid,cs:S.nr.cs.slice(),isPolicy:false,toAddr: S.nr.toAddr||''}));
+  S.rules.push(Object.assign({},S.nr,{table:table,id:S.nid,cs:S.nr.cs.slice(),isPolicy:false}));
   S.nid++;S.showAdd=false;render();
 }
 
