@@ -7,41 +7,65 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;background:#080c14;color:#e2e8f0;min-height:100vh;padding:20px}
-#app{max-width:860px;margin:0 auto}
+#app{max-width:900px;margin:0 auto}
 h1{font-size:20px;font-weight:600;color:#f1f5f9;margin-bottom:3px}
 .sub{font-size:13px;color:#475569;margin-bottom:20px}
 .mono{font-family:'Courier New',monospace}
 .card{background:#0d1220;border:1px solid #1e2d45;border-radius:12px;padding:14px 16px;margin-bottom:14px}
-.lbl{font-size:11px;color:#475569;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
-.topo-svg{display:block;width:100%}
-.preset-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
-.preset-btn{font-size:11px;padding:4px 9px;border-radius:5px;cursor:pointer;border:1px solid #1e2d45;background:#0d1220;color:#64748b;transition:all .15s}
-.preset-btn:hover{border-color:#334155;color:#94a3b8}
-.preset-btn.active{background:#0c1a2e;color:#60a5fa;border-color:#1e40af}
+.lbl{font-size:11px;color:#475569;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+
+/* device map */
+.dev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.dev-zone{border-radius:8px;padding:10px 12px;border:1px solid}
+.dev-zone-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.dev-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:11px}
+.dev-row:last-child{border-bottom:none}
+.dev-name{color:#94a3b8}.dev-ip{font-family:'Courier New',monospace;font-size:11px}
+.dev-fw{opacity:.6;font-style:italic}
+.dev-port{font-size:10px;padding:1px 5px;border-radius:3px;margin-left:4px;background:rgba(255,255,255,.07)}
+
+/* forms */
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:12px}
 .form-field label{display:block;font-size:11px;color:#475569;margin-bottom:4px}
 select,input[type=text]{width:100%;padding:6px 8px;background:#080c14;border:1px solid #1e2d45;border-radius:6px;color:#e2e8f0;font-size:12px;font-family:'Courier New',monospace}
-select:focus{outline:none;border-color:#334155}
+select:focus,input[type=text]:focus{outline:none;border-color:#334155}
+input[readonly]{color:#334155;cursor:default}
+
+/* buttons */
 .btn{padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;border:1px solid #1e2d45;background:transparent;color:#e2e8f0;transition:all .1s}
 .btn:hover{background:#0d1220;border-color:#334155}
 .btn-primary{background:#f1f5f9!important;color:#080c14!important;border:none!important;padding:8px 20px!important;font-size:13px!important;font-weight:600;border-radius:8px}
 .btn-primary:hover{filter:brightness(.9)}
 .btn-danger{color:#f87171;border-color:#7f1d1d}.btn-danger:hover{background:#2d0505}
 .btn-row{display:flex;align-items:center;gap:8px}
+
+/* topology */
+.topo-svg{display:block;width:100%}
+
+/* presets */
+.preset-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.preset-btn{font-size:11px;padding:4px 9px;border-radius:5px;cursor:pointer;border:1px solid #1e2d45;background:#0d1220;color:#64748b;transition:all .15s}
+.preset-btn:hover{border-color:#334155;color:#94a3b8}
+.preset-btn.active{background:#0c1a2e;color:#60a5fa;border-color:#1e40af}
+
+/* simulation */
 .steps{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
-.step{display:grid;grid-template-columns:120px 1fr 90px;gap:8px;align-items:start;padding:7px 10px;border-radius:8px;border:1px solid #1e2d45;background:#080c14}
+.step{display:grid;grid-template-columns:120px 1fr 80px;gap:8px;align-items:start;padding:8px 10px;border-radius:8px;border:1px solid #1e2d45;background:#080c14}
 .step.s-accept{border-color:#166534}.step.s-drop{border-color:#7f1d1d}
 .step-chain{font-size:11px;font-weight:600;line-height:1.5}
 .step-table{font-size:9px;color:#475569;font-weight:400}
 .step-cmd{font-size:10px;color:#64748b;word-break:break-all;line-height:1.6}
 .step-verdict{font-size:11px;font-weight:700;text-align:right}
 .v-accept{color:#4ade80}.v-drop{color:#f87171}.v-masq{color:#fbbf24}.v-nat{color:#a78bfa}.v-pass{color:#334155}
+.nat-transform{margin-top:6px;padding:6px 10px;background:#0f0a24;border:1px solid #2a1d5e;border-radius:6px;font-size:10px;line-height:1.8}
 .verdict-box{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px}
 .verdict-accept{background:#052e16;border:1px solid #166534}
 .verdict-drop{background:#2d0505;border:1px solid #7f1d1d}
 .verdict-icon{font-size:22px}
 .verdict-text{font-size:15px;font-weight:600}
 .verdict-sub{font-size:12px;color:#475569;margin-top:2px}
+
+/* rules */
 .policies{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .policy-tag{font-family:'Courier New',monospace;font-size:10px;padding:3px 8px;background:#2d0505;color:#fca5a5;border:1px solid #7f1d1d;border-radius:4px}
 .tabs{display:flex;gap:3px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px}
@@ -56,39 +80,118 @@ select:focus{outline:none;border-color:#334155}
 .tt-drop{background:#2d0505;color:#f87171;border:1px solid #7f1d1d}
 .tt-nat{background:#1a0c2e;color:#a78bfa;border:1px solid #3d1d6e}
 .empty{font-size:13px;color:#334155;padding:10px 0}
+
+/* add form */
 .add-form{margin-top:12px;background:#080c14;border:1px solid #1e2d45;border-radius:10px;padding:14px}
 .add-form-title{font-size:13px;font-weight:600;margin-bottom:12px;color:#cbd5e1}
 .cs-row{display:flex;gap:12px;flex-wrap:wrap}
 .cs-label{display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;color:#94a3b8}
 input[type=checkbox]{width:13px;height:13px;accent-color:#60a5fa;flex-shrink:0}
 .cmd-preview{font-family:'Courier New',monospace;font-size:11px;color:#64748b;background:#0d1220;padding:7px 10px;border-radius:6px;word-break:break-all;line-height:1.6;margin-bottom:10px;border:1px solid #1e2d45}
-.nat-note{margin-bottom:10px;font-size:12px;color:#475569;padding:7px 10px;background:#0d1220;border:1px solid #1e2d45;border-radius:6px}
-.pkt-line{font-size:13px;padding:8px 12px;background:#080c14;border:1px solid #1e2d45;border-radius:8px;margin-bottom:10px;font-family:'Courier New',monospace}
+
+/* dnat panel */
+.dnat-panel{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:8px;padding:14px;background:#0a0c18;border:1px solid #2a1d5e;border-radius:10px;margin-bottom:10px}
+.dnat-side-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.dnat-arrow{text-align:center;font-size:24px;color:#a78bfa}
+.dnat-hint{font-size:11px;padding:7px 10px;background:#0a0e1a;border-radius:6px;margin-bottom:10px;border-left:3px solid #a78bfa;line-height:1.7;color:#64748b}
+.nat-note{font-size:11px;padding:7px 10px;background:#0a0e1a;border:1px solid #1e2d45;border-radius:6px;margin-bottom:10px;color:#475569;line-height:1.7}
+
+/* pkt line */
+.pkt-line{font-size:13px;padding:8px 12px;background:#080c14;border:1px solid #1e2d45;border-radius:8px;margin-bottom:10px;font-family:'Courier New',monospace;line-height:1.7}
 .ctstate-badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;background:#1a1205;color:#fbbf24;border:1px solid #3d2d0a;margin-left:4px}
-input[type=text][readonly]{color:#334155;cursor:default}
+
 @media(max-width:560px){
-  .step{grid-template-columns:85px 1fr 65px}
-  .step-chain{font-size:9px}.step-cmd{font-size:9px}.step-verdict{font-size:9px}
+  .step{grid-template-columns:85px 1fr 60px}
+  .step-chain{font-size:9px}.step-cmd{font-size:9px}
+  .dnat-panel{grid-template-columns:1fr 24px 1fr}
 }
 </style>
 </head>
 <body>
 <div id="app">
   <h1>🔥 iptables Simulagailua</h1>
-  <p class="sub">Bidali paketeak LAN, WAN eta DMZ artean eta ikusi iptables arauek nola prozesatzen dituzten</p>
+  <p class="sub">Bidali paketeak sare-inguruneetan zehar eta ikusi iptables arauek nola prozesatzen dituzten</p>
   <div id="root"></div>
 </div>
+<datalist id="port-sugg">
+  <option value="20"><option value="21"><option value="22"><option value="25">
+  <option value="53"><option value="80"><option value="110"><option value="143">
+  <option value="443"><option value="587"><option value="993"><option value="1194">
+  <option value="2222"><option value="3306"><option value="3389"><option value="5900">
+  <option value="8080"><option value="8443"><option value="8888"><option value="9090">
+</datalist>
+
 <script>
-const ZONE_COLOR={WAN:'#f87171',LAN:'#4ade80',DMZ:'#fbbf24',FIREWALL:'#60a5fa'};
-const ZONE_BG={WAN:'#2d0505',LAN:'#052e16',DMZ:'#1a1205',FIREWALL:'#0c1a2e'};
-const CHAIN_COLOR={PREROUTING:'#60a5fa',INPUT:'#fb923c',FORWARD:'#4ade80',OUTPUT:'#fb923c',POSTROUTING:'#60a5fa'};
-const NAT_CHAINS=['PREROUTING','POSTROUTING'];
-const FILTER_TARGETS=['ACCEPT','DROP','REJECT','LOG'];
-const NAT_TARGETS=['MASQUERADE','SNAT','DNAT','REDIRECT','LOG'];
+// ── network devices with real IPs ─────────────────────────────
+const DEVICES = {
+  WAN: {
+    color:'#f87171', bg:'#2d0505', border:'#7f1d1d',
+    label:'WAN (Internet)',
+    items:[
+      {name:'Bezero publikoa A',    ip:'85.120.45.10',  note:''},
+      {name:'Bezero publikoa B',    ip:'91.200.33.55',  note:''},
+      {name:'Erasotzaile adib.',    ip:'198.51.100.99', note:''},
+      {name:'Suebaki WAN IP ←',    ip:'203.0.113.1',   note:'fw', port:''},
+    ]
+  },
+  LAN: {
+    color:'#4ade80', bg:'#052e16', border:'#166534',
+    label:'LAN (Barne-sarea 192.168.1.0/24)',
+    items:[
+      {name:'PC nagusia',           ip:'192.168.1.10',  note:''},
+      {name:'PC bigarrena',         ip:'192.168.1.20',  note:''},
+      {name:'Eramangarria',         ip:'192.168.1.50',  note:''},
+      {name:'Inprimagailua',        ip:'192.168.1.100', note:''},
+      {name:'Atebidea (suebakia) ←',ip:'192.168.1.1',  note:'fw'},
+    ]
+  },
+  DMZ: {
+    color:'#fbbf24', bg:'#1a1205', border:'#3d2d0a',
+    label:'DMZ (192.168.2.0/24)',
+    items:[
+      {name:'Web zerbitzaria',      ip:'192.168.2.10',  note:'', port:'80/443'},
+      {name:'FTP zerbitzaria',      ip:'192.168.2.20',  note:'', port:'21'},
+      {name:'Mail zerbitzaria',     ip:'192.168.2.30',  note:'', port:'25/587'},
+      {name:'Atebidea (suebakia) ←',ip:'192.168.2.1',  note:'fw'},
+    ]
+  },
+  FIREWALL: {
+    color:'#60a5fa', bg:'#0c1a2e', border:'#1e40af',
+    label:'SUEBAKIA',
+    items:[
+      {name:'WAN interfazea (eth0)', ip:'203.0.113.1',  note:'fw'},
+      {name:'LAN interfazea (eth1)', ip:'192.168.1.1',  note:'fw'},
+      {name:'DMZ interfazea (eth2)', ip:'192.168.2.1',  note:'fw'},
+    ]
+  }
+};
 
-function targetsFor(chain){return NAT_CHAINS.includes(chain)?NAT_TARGETS:FILTER_TARGETS;}
-function tableFor(chain){return NAT_CHAINS.includes(chain)?'nat':'filter';}
+// Internal hosts for DNAT destination dropdown
+const INTERNAL_HOSTS = [
+  {label:'192.168.2.10 — Web zerbitzaria (DMZ)',  ip:'192.168.2.10'},
+  {label:'192.168.2.20 — FTP zerbitzaria (DMZ)',  ip:'192.168.2.20'},
+  {label:'192.168.2.30 — Mail zerbitzaria (DMZ)', ip:'192.168.2.30'},
+  {label:'192.168.1.10 — PC nagusia (LAN)',        ip:'192.168.1.10'},
+  {label:'192.168.1.20 — PC bigarrena (LAN)',      ip:'192.168.1.20'},
+  {label:'bestea (idatzi eskuz)…',                 ip:''},
+];
 
+const WAN_IP = '203.0.113.1';
+
+// ── constants ─────────────────────────────────────────────────
+const ZONE_COLOR = {WAN:'#f87171',LAN:'#4ade80',DMZ:'#fbbf24',FIREWALL:'#60a5fa'};
+const ZONE_BG    = {WAN:'#2d0505',LAN:'#052e16',DMZ:'#1a1205',FIREWALL:'#0c1a2e'};
+const CHAIN_COLOR= {PREROUTING:'#60a5fa',INPUT:'#fb923c',FORWARD:'#4ade80',OUTPUT:'#fb923c',POSTROUTING:'#60a5fa'};
+const NAT_CHAINS = ['PREROUTING','POSTROUTING'];
+const FILTER_TARGETS = ['ACCEPT','DROP','REJECT','LOG'];
+const NAT_TARGETS    = ['DNAT','MASQUERADE','SNAT','REDIRECT','LOG'];
+// PREROUTING default = DNAT, POSTROUTING default = MASQUERADE
+const CHAIN_DEFAULT_TARGET = {PREROUTING:'DNAT', POSTROUTING:'MASQUERADE'};
+
+function targetsFor(chain){ return NAT_CHAINS.includes(chain) ? NAT_TARGETS : FILTER_TARGETS; }
+function tableFor(chain)  { return NAT_CHAINS.includes(chain) ? 'nat' : 'filter'; }
+
+// ── default rules ─────────────────────────────────────────────
 const DEFAULT_RULES=[
   {id:1, table:'filter',chain:'INPUT',      inIf:'*',  outIf:'*',  proto:'any',dport:'*', cs:[],                        target:'DROP',isPolicy:true},
   {id:2, table:'filter',chain:'FORWARD',    inIf:'*',  outIf:'*',  proto:'any',dport:'*', cs:[],                        target:'DROP',isPolicy:true},
@@ -106,26 +209,29 @@ const DEFAULT_RULES=[
   {id:14,table:'filter',chain:'FORWARD',    inIf:'LAN',outIf:'DMZ',proto:'tcp',dport:'20',cs:['NEW','ESTABLISHED'],      target:'ACCEPT'},
   {id:15,table:'filter',chain:'FORWARD',    inIf:'DMZ',outIf:'LAN',proto:'any',dport:'*', cs:['ESTABLISHED','RELATED'],  target:'ACCEPT'},
   {id:16,table:'filter',chain:'FORWARD',    inIf:'DMZ',outIf:'LAN',proto:'any',dport:'*', cs:['NEW'],                    target:'DROP'},
-  {id:17,table:'nat',   chain:'POSTROUTING',inIf:'*',  outIf:'WAN',proto:'any',dport:'*', cs:[],                        target:'MASQUERADE'},
+  {id:17,table:'nat',   chain:'POSTROUTING',inIf:'*',  outIf:'WAN',proto:'any',dport:'*', cs:[],                        target:'MASQUERADE',toIp:'',toPort:''},
 ];
 
+// ── engine ─────────────────────────────────────────────────────
 function getPath(src,dst){
   if(dst==='FIREWALL')return[{chain:'PREROUTING',table:'nat'},{chain:'INPUT',table:'filter'}];
   if(src==='FIREWALL')return[{chain:'OUTPUT',table:'filter'},{chain:'POSTROUTING',table:'nat'}];
   return[{chain:'PREROUTING',table:'nat'},{chain:'FORWARD',table:'filter'},{chain:'POSTROUTING',table:'nat'}];
 }
+
 function matchRule(pkt,rule){
   if(rule.isPolicy)return false;
   if(rule.inIf!=='*'&&rule.inIf!==pkt.src)return false;
   if(rule.outIf!=='*'&&rule.outIf!==pkt.dst)return false;
   if(rule.proto!=='any'&&rule.proto!==pkt.proto)return false;
   if(rule.dport!=='*'&&rule.dport!==pkt.dport)return false;
-  if(rule.cs.length>0&&!rule.cs.includes(pkt.ctstate))return false;
+  if(rule.cs&&rule.cs.length>0&&!rule.cs.includes(pkt.ctstate))return false;
   return true;
 }
+
 function ruleToCmd(rule){
   if(rule.isPolicy)return'iptables -P '+rule.chain+' '+rule.target;
-  let s='iptables';
+  var s='iptables';
   if(rule.table==='nat')s+=' -t nat';
   s+=' -A '+rule.chain;
   if(rule.inIf!=='*')s+=' -i '+rule.inIf;
@@ -134,72 +240,111 @@ function ruleToCmd(rule){
   if(rule.dport!=='*')s+=' --dport '+rule.dport;
   if(rule.cs&&rule.cs.length)s+=' -m conntrack --ctstate '+rule.cs.join(',');
   s+=' -j '+rule.target;
+  if(rule.target==='DNAT'){
+    var d=(rule.toIp||'')+(rule.toPort?':'+rule.toPort:'');
+    if(d)s+=' --to-destination '+d;
+  }
+  if(rule.target==='SNAT'&&rule.toIp)s+=' --to-source '+rule.toIp;
+  if(rule.target==='REDIRECT'&&rule.toPort)s+=' --to-port '+rule.toPort;
   return s;
 }
+
 function simulate(pkt,rules){
-  const path=getPath(pkt.src,pkt.dst);
-  const steps=[];
-  const pol={};
-  rules.filter(r=>r.isPolicy).forEach(r=>{pol[r.chain]=r.target;});
-  for(const{chain,table}of path){
-    const cr=rules.filter(r=>r.chain===chain&&r.table===table&&!r.isPolicy);
-    let matched=null;
-    for(const rule of cr){if(matchRule(pkt,rule)){matched=rule;break;}}
+  var path=getPath(pkt.src,pkt.dst);
+  var steps=[];
+  var pol={};
+  rules.filter(function(r){return r.isPolicy;}).forEach(function(r){pol[r.chain]=r.target;});
+  var cur=Object.assign({},pkt); // cur evolves with NAT transformations
+
+  for(var pi=0;pi<path.length;pi++){
+    var chain=path[pi].chain,table=path[pi].table;
+    var cr=rules.filter(function(r){return r.chain===chain&&r.table===table&&!r.isPolicy;});
+    var matched=null;
+    for(var ri=0;ri<cr.length;ri++){if(matchRule(cur,cr[ri])){matched=cr[ri];break;}}
+
     if(matched){
-      steps.push({chain,table,rule:matched,verdict:matched.target});
-      if(matched.target==='DROP'||matched.target==='REJECT')return{steps,final:'DROP'};
+      var nat=null, nxt=Object.assign({},cur);
+      if(matched.target==='DNAT'){
+        var toDst=(matched.toIp||'')+(matched.toPort?':'+matched.toPort:'');
+        nat={label:'DNAT',
+          from:(cur.natDstIp||'['+ cur.dst+'WAN IP]')+':'+cur.dport,
+          to:toDst||'?',
+          warn:'⚠ FORWARD arauak barne-portua bilatu behar du: '+(matched.toPort||cur.dport)};
+        if(matched.toPort)nxt.dport=matched.toPort;
+        if(matched.toIp)nxt.natDstIp=matched.toIp;
+      }else if(matched.target==='SNAT'){
+        nat={label:'SNAT',from:'IP pribatua',to:matched.toIp||'?',warn:''};
+        if(matched.toIp)nxt.natSrcIp=matched.toIp;
+      }else if(matched.target==='MASQUERADE'){
+        nat={label:'MASQUERADE',from:'IP pribatua',to:WAN_IP+' (suebakia)',warn:''};
+        nxt.natSrcIp=WAN_IP;
+      }else if(matched.target==='REDIRECT'){
+        nat={label:'REDIRECT',from:'port '+cur.dport,to:'port '+(matched.toPort||'?'),warn:''};
+        if(matched.toPort)nxt.dport=matched.toPort;
+      }
+      steps.push({chain,table,rule:matched,verdict:matched.target,nat});
+      cur=nxt;
+      if(matched.target==='DROP'||matched.target==='REJECT')return{steps,final:'DROP',cur};
     }else if(table==='filter'){
-      const p=pol[chain]||'DROP';
+      var p=pol[chain]||'DROP';
       steps.push({chain,table,rule:null,verdict:p,isDefault:true});
-      return{steps,final:p};
+      return{steps,final:p,cur};
     }else{
       steps.push({chain,table,rule:null,verdict:'PASA'});
     }
   }
-  return{steps,final:'ACCEPT'};
+  return{steps,final:'ACCEPT',cur};
 }
 
+// ── presets ───────────────────────────────────────────────────
 const PRESETS=[
-  {label:'WAN→DMZ HTTP',  src:'WAN',dst:'DMZ',      proto:'tcp',dport:'80', ctstate:'NEW'},
-  {label:'WAN→DMZ HTTPS', src:'WAN',dst:'DMZ',      proto:'tcp',dport:'443',ctstate:'NEW'},
-  {label:'WAN→DMZ SSH',   src:'WAN',dst:'DMZ',      proto:'tcp',dport:'22', ctstate:'NEW'},
-  {label:'WAN→LAN HTTP',  src:'WAN',dst:'LAN',      proto:'tcp',dport:'80', ctstate:'NEW'},
-  {label:'LAN→WAN HTTP',  src:'LAN',dst:'WAN',      proto:'tcp',dport:'80', ctstate:'NEW'},
-  {label:'LAN→DMZ FTP',   src:'LAN',dst:'DMZ',      proto:'tcp',dport:'21', ctstate:'NEW'},
-  {label:'LAN→DMZ HTTP',  src:'LAN',dst:'DMZ',      proto:'tcp',dport:'80', ctstate:'NEW'},
-  {label:'DMZ→LAN NEW',   src:'DMZ',dst:'LAN',      proto:'tcp',dport:'80', ctstate:'NEW'},
-  {label:'DMZ→LAN ESTAB.',src:'DMZ',dst:'LAN',      proto:'tcp',dport:'80', ctstate:'ESTABLISHED'},
-  {label:'LAN→FW SSH',    src:'LAN',dst:'FIREWALL', proto:'tcp',dport:'22', ctstate:'NEW'},
-  {label:'WAN→FW SSH',    src:'WAN',dst:'FIREWALL', proto:'tcp',dport:'22', ctstate:'NEW'},
+  {label:'WAN→DMZ :80',    src:'WAN',dst:'DMZ',      proto:'tcp',dport:'80', ctstate:'NEW'},
+  {label:'WAN→DMZ :443',   src:'WAN',dst:'DMZ',      proto:'tcp',dport:'443',ctstate:'NEW'},
+  {label:'WAN→LAN :80',    src:'WAN',dst:'LAN',      proto:'tcp',dport:'80', ctstate:'NEW'},
+  {label:'LAN→WAN :80',    src:'LAN',dst:'WAN',      proto:'tcp',dport:'80', ctstate:'NEW'},
+  {label:'LAN→DMZ :80',    src:'LAN',dst:'DMZ',      proto:'tcp',dport:'80', ctstate:'NEW'},
+  {label:'LAN→DMZ :21',    src:'LAN',dst:'DMZ',      proto:'tcp',dport:'21', ctstate:'NEW'},
+  {label:'DMZ→LAN NEW',    src:'DMZ',dst:'LAN',      proto:'tcp',dport:'80', ctstate:'NEW'},
+  {label:'DMZ→LAN ESTAB.', src:'DMZ',dst:'LAN',      proto:'tcp',dport:'80', ctstate:'ESTABLISHED'},
+  {label:'LAN→FW SSH',     src:'LAN',dst:'FIREWALL', proto:'tcp',dport:'22', ctstate:'NEW'},
+  {label:'WAN→FW SSH',     src:'WAN',dst:'FIREWALL', proto:'tcp',dport:'22', ctstate:'NEW'},
+  {label:'🔀 WAN:8080→DMZ',src:'WAN',dst:'DMZ',      proto:'tcp',dport:'8080',ctstate:'NEW'},
+  {label:'🔀 WAN:2222→LAN',src:'WAN',dst:'LAN',      proto:'tcp',dport:'2222',ctstate:'NEW'},
+  {label:'🎭 LAN→WAN NAT', src:'LAN',dst:'WAN',      proto:'tcp',dport:'443',ctstate:'NEW'},
 ];
 
-let S={
-  rules:DEFAULT_RULES.map(r=>({...r,cs:[...r.cs]})),
+// ── state ──────────────────────────────────────────────────────
+var S={
+  rules:DEFAULT_RULES.map(function(r){return Object.assign({},r,{cs:r.cs.slice(),toIp:r.toIp||'',toPort:r.toPort||''});}),
   pkt:{src:'WAN',dst:'DMZ',proto:'tcp',dport:'80',ctstate:'NEW'},
-  result:null,tab:'FORWARD',showAdd:false,
-  nr:{chain:'FORWARD',inIf:'*',outIf:'*',proto:'any',dport:'*',cs:[],target:'ACCEPT'},
+  result:null, tab:'FORWARD', showAdd:false, showMap:true,
+  nr:{chain:'PREROUTING',inIf:'*',outIf:'*',proto:'any',dport:'*',cs:[],target:'DNAT',toIp:'',toPort:''},
   nid:18
 };
 
+// ── topology SVG ───────────────────────────────────────────────
 function buildTopo(){
-  const{pkt,result}=S;
-  const activePath=result?getPath(pkt.src,pkt.dst).map(x=>x.chain):[];
-  const hasR=activePath.length>0;
-  const acc=result&&result.final==='ACCEPT';
-  const pos={WAN:{x:75,y:95},FIREWALL:{x:300,y:95},LAN:{x:525,y:95},DMZ:{x:300,y:215}};
-  const W=90,H=44;
+  var pkt=S.pkt, result=S.result;
+  var activePath=result?getPath(pkt.src,pkt.dst).map(function(x){return x.chain;}):[];
+  var hasR=activePath.length>0, acc=result&&result.final==='ACCEPT';
+  var pos={WAN:{x:75,y:100},FIREWALL:{x:300,y:100},LAN:{x:525,y:100},DMZ:{x:300,y:230}};
+  var W=90,H=44;
+
   function edgeActive(a,b){
     if(!hasR)return false;
-    const s=pkt.src,d=pkt.dst;
+    var s=pkt.src,d=pkt.dst;
     if(s!=='FIREWALL'&&d!=='FIREWALL'){
       if((a===s&&b==='FIREWALL')||(b===s&&a==='FIREWALL'))return true;
       if((a===d&&b==='FIREWALL')||(b===d&&a==='FIREWALL'))return true;
     }else{if((a===s&&b===d)||(a===d&&b===s))return true;}
     return false;
   }
-  const edges=[['WAN','FIREWALL'],['FIREWALL','LAN'],['FIREWALL','DMZ']];
-  const lc=!hasR?'#1e2d45':acc?'#166534':'#7f1d1d';
-  let svg='<defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="'+lc+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>';
+
+  var edges=[['WAN','FIREWALL'],['FIREWALL','LAN'],['FIREWALL','DMZ']];
+  var lc=!hasR?'#1e2d45':acc?'#166534':'#7f1d1d';
+  var svg='<defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">'
+    +'<path d="M2 1L8 5L2 9" fill="none" stroke="'+lc+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>';
+
   edges.forEach(function(e){
     var a=e[0],b=e[1],pa=pos[a],pb=pos[b];
     var x1=pa.x,y1=pa.y,x2=pb.x,y2=pb.y;
@@ -208,43 +353,55 @@ function buildTopo(){
     if(b==='FIREWALL'){x2+=pa.x>pb.x?W/2:(pa.x<pb.x?-W/2:0);y2+=pa.y>pb.y?H/2:0;}
     else{x2+=pa.x>pb.x?W/2:-W/2;}
     var active=edgeActive(a,b);
-    var dash=active&&!acc?' stroke-dasharray="5 3"':'';
-    var marker=active?' marker-end="url(#arr)"':'';
-    svg+='<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(active?lc:'#1e2d45')+'" stroke-width="'+(active?2:1)+'"'+dash+marker+'/>';
+    svg+='<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2
+      +'" stroke="'+(active?lc:'#1e2d45')+'" stroke-width="'+(active?2:1)+'"'
+      +(active&&!acc?' stroke-dasharray="5 3"':'')
+      +(active?' marker-end="url(#arr)"':'')
+      +'/>';
   });
+
   Object.keys(pos).forEach(function(zone){
     var p=pos[zone],zc=ZONE_COLOR[zone],zb=ZONE_BG[zone];
     var inv=hasR&&(pkt.src===zone||pkt.dst===zone);
-    svg+='<g><rect x="'+(p.x-W/2)+'" y="'+(p.y-H/2)+'" width="'+W+'" height="'+H+'" rx="8" fill="'+(inv?zb:'#080c14')+'" stroke="'+(inv?zc:'#1e2d45')+'" stroke-width="'+(inv?2:.5)+'"/>';
-    svg+='<text x="'+p.x+'" y="'+p.y+'" text-anchor="middle" dominant-baseline="central" font-family="Courier New,monospace" font-size="12" font-weight="600" fill="'+zc+'">'+zone+'</text></g>';
+    svg+='<g>'
+      +'<rect x="'+(p.x-W/2)+'" y="'+(p.y-H/2)+'" width="'+W+'" height="'+H+'" rx="8"'
+        +' fill="'+(inv?zb:'#080c14')+'" stroke="'+(inv?zc:'#1e2d45')+'" stroke-width="'+(inv?2:.5)+'"/>'
+      +'<text x="'+p.x+'" y="'+p.y+'" text-anchor="middle" dominant-baseline="central"'
+        +' font-family="Courier New,monospace" font-size="12" font-weight="600" fill="'+zc+'">'+zone+'</text>'
+      +'</g>';
   });
+
+  // chain badges
   if(hasR&&result){
-    var s=pkt.src,d=pkt.dst;
     result.steps.forEach(function(step,i){
       var cc=CHAIN_COLOR[step.chain]||'#64748b';
       var lx,ly;
-      var isNonFW=s!=='FIREWALL'&&d!=='FIREWALL';
+      var s=pkt.src,d=pkt.dst,isNonFW=s!=='FIREWALL'&&d!=='FIREWALL';
       if(isNonFW){
-        if(i===0){lx=(pos[s].x+pos.FIREWALL.x)/2;ly=Math.min(pos[s].y,pos.FIREWALL.y)-26;}
-        else if(i===1){lx=pos.FIREWALL.x;ly=pos.FIREWALL.y-36;}
-        else{lx=(pos.FIREWALL.x+pos[d].x)/2;ly=Math.min(pos.FIREWALL.y,pos[d].y)-26;}
+        if(i===0){lx=(pos[s].x+pos.FIREWALL.x)/2;ly=Math.min(pos[s].y,pos.FIREWALL.y)-28;}
+        else if(i===1){lx=pos.FIREWALL.x;ly=pos.FIREWALL.y-38;}
+        else{lx=(pos.FIREWALL.x+pos[d].x)/2;ly=Math.min(pos.FIREWALL.y,pos[d].y)-28;}
       }else if(d==='FIREWALL'){
-        if(i===0){lx=(pos[s].x+pos.FIREWALL.x)/2;ly=pos[s].y-26;}
-        else{lx=pos.FIREWALL.x;ly=pos.FIREWALL.y-36;}
+        if(i===0){lx=(pos[s].x+pos.FIREWALL.x)/2;ly=pos[s].y-28;}
+        else{lx=pos.FIREWALL.x;ly=pos.FIREWALL.y-38;}
       }else{
-        if(i===0){lx=pos.FIREWALL.x;ly=pos.FIREWALL.y-36;}
-        else{lx=(pos.FIREWALL.x+pos[d].x)/2;ly=Math.min(pos.FIREWALL.y,pos[d].y)-26;}
+        if(i===0){lx=pos.FIREWALL.x;ly=pos.FIREWALL.y-38;}
+        else{lx=(pos.FIREWALL.x+pos[d].x)/2;ly=Math.min(pos.FIREWALL.y,pos[d].y)-28;}
       }
       var vd=step.verdict;
       var vc=vd==='ACCEPT'?'#4ade80':(vd==='DROP'||vd==='REJECT')?'#f87171':(vd==='MASQUERADE'||vd==='SNAT'||vd==='DNAT')?'#a78bfa':'#475569';
-      svg+='<g><rect x="'+(lx-38)+'" y="'+(ly-12)+'" width="76" height="23" rx="4" fill="#080c14" stroke="'+cc+'" stroke-width=".5"/>';
-      svg+='<text x="'+lx+'" y="'+(ly-2)+'" text-anchor="middle" font-family="Courier New,monospace" font-size="9" font-weight="600" fill="'+cc+'">'+step.chain+'</text>';
-      svg+='<text x="'+lx+'" y="'+(ly+7)+'" text-anchor="middle" font-family="Courier New,monospace" font-size="8" fill="'+vc+'">'+vd+'</text></g>';
+      svg+='<g>'
+        +'<rect x="'+(lx-38)+'" y="'+(ly-12)+'" width="76" height="23" rx="4" fill="#080c14" stroke="'+cc+'" stroke-width=".5"/>'
+        +'<text x="'+lx+'" y="'+(ly-2)+'" text-anchor="middle" font-family="Courier New,monospace" font-size="9" font-weight="600" fill="'+cc+'">'+step.chain+'</text>'
+        +'<text x="'+lx+'" y="'+(ly+7)+'" text-anchor="middle" font-family="Courier New,monospace" font-size="8" fill="'+vc+'">'+vd+'</text>'
+        +'</g>';
     });
   }
-  return'<svg class="topo-svg" viewBox="0 0 600 275" xmlns="http://www.w3.org/2000/svg">'+svg+'</svg>';
+
+  return'<svg class="topo-svg" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">'+svg+'</svg>';
 }
 
+// ── helpers ───────────────────────────────────────────────────
 function verdictCls(v){
   if(v==='ACCEPT')return'v-accept';
   if(v==='DROP'||v==='REJECT')return'v-drop';
@@ -258,6 +415,7 @@ function targetTagCls(t){
   return'tt-nat';
 }
 
+// ── render ────────────────────────────────────────────────────
 function render(){
   var rules=S.rules,pkt=S.pkt,result=S.result,tab=S.tab,showAdd=S.showAdd,nr=S.nr;
   var ALL_CHAINS=['PREROUTING','INPUT','FORWARD','OUTPUT','POSTROUTING'];
@@ -265,57 +423,174 @@ function render(){
   var policies=rules.filter(function(r){return r.isPolicy;});
   var p=pkt;
 
+  // ── device map ──
+  var devMapHtml='';
+  if(S.showMap){
+    devMapHtml='<div class="dev-grid">';
+    ['WAN','LAN','DMZ','FIREWALL'].forEach(function(zone){
+      var d=DEVICES[zone];
+      devMapHtml+='<div class="dev-zone" style="background:'+d.bg+';border-color:'+d.border+'">'
+        +'<div class="dev-zone-title" style="color:'+d.color+'">'+zone+'</div>'
+        +'<div style="font-size:10px;color:#334155;margin-bottom:6px">'+d.label+'</div>';
+      d.items.forEach(function(item){
+        devMapHtml+='<div class="dev-row'+(item.note==='fw'?' dev-fw':'')+'">'
+          +'<span class="dev-name">'+item.name+'</span>'
+          +'<span>'
+          +'<span class="dev-ip" style="color:'+d.color+'">'+item.ip+'</span>'
+          +(item.port?'<span class="dev-port">:'+item.port+'</span>':'')
+          +'</span>'
+          +'</div>';
+      });
+      devMapHtml+='</div>';
+    });
+    devMapHtml+='</div>';
+  }
+
+  // ── presets ──
   var presetsHtml=PRESETS.map(function(pr){
     var a=pr.src===p.src&&pr.dst===p.dst&&pr.dport===p.dport&&pr.ctstate===p.ctstate;
     return'<button class="preset-btn'+(a?' active':'')+'" onclick=\'applyPreset('+JSON.stringify(pr)+')\'>'+pr.label+'</button>';
   }).join('');
 
+  // ── packet form ──
   function sel(label,key,opts){
     var optH=opts.map(function(o){return'<option value="'+o+'"'+(p[key]===o?' selected':'')+'>'+o+'</option>';}).join('');
     return'<div class="form-field"><label>'+label+'</label><select onchange="setPkt(\''+key+'\',this.value)">'+optH+'</select></div>';
   }
+  function portInput(label,key){
+    return'<div class="form-field"><label>'+label+'</label>'
+      +'<input type="text" list="port-sugg" placeholder="*" value="'+(p[key]==='*'?'':p[key])+'" '
+      +'oninput="setPkt(\''+key+'\',this.value||\'*\')">'
+      +'</div>';
+  }
 
+  // ── simulation result ──
   var simHtml='';
   if(result){
     var zc=function(z){return ZONE_COLOR[z]||'#94a3b8';};
-    var pktLine='<div class="pkt-line"><span style="color:'+zc(p.src)+';font-weight:600">'+p.src+'</span>'
+    var pktLine='<div class="pkt-line">'
+      +'<span style="color:'+zc(p.src)+';font-weight:600">'+p.src+'</span>'
       +'<span style="color:#334155"> → </span>'
       +'<span style="color:'+zc(p.dst)+';font-weight:600">'+p.dst+'</span>'
-      +'<span style="color:#64748b">  '+p.proto+(p.dport!=='*'?':'+p.dport:'')+'</span>'
-      +'<span class="ctstate-badge">'+p.ctstate+'</span></div>';
+      +'<span style="color:#64748b">  '+p.proto+(p.dport!=='*'?':'+p.dport:'')+' </span>'
+      +'<span class="ctstate-badge">'+p.ctstate+'</span>'
+      +'</div>';
+
     var stepsHtml=result.steps.map(function(step){
       var cc=CHAIN_COLOR[step.chain]||'#64748b';
-      var vd=step.verdict;
-      var vc=verdictCls(vd);
+      var vd=step.verdict, vc=verdictCls(vd);
       var bc=(vd==='DROP'||vd==='REJECT')?' s-drop':vd==='ACCEPT'?' s-accept':'';
       var cmd=step.rule?ruleToCmd(step.rule):(vd==='PASA'?'nat: araurik ez':'politika lehenetsía: '+vd);
-      return'<div class="step'+bc+'"><div class="step-chain mono" style="color:'+cc+'">'+step.chain+'<br><span class="step-table">('+step.table+')</span></div>'
-        +'<div class="step-cmd mono">'+cmd+'</div>'
-        +'<div class="step-verdict mono '+vc+'">'+vd+'</div></div>';
+      var natHtml='';
+      if(step.nat){
+        natHtml='<div class="nat-transform">'
+          +'<span style="color:#a78bfa;font-weight:700">⟳ '+step.nat.label+':</span>'
+          +' <span style="color:#64748b">'+step.nat.from+'</span>'
+          +' <span style="color:#475569">→</span>'
+          +' <span style="color:#c4b5fd;font-weight:600">'+step.nat.to+'</span>'
+          +(step.nat.warn?'<br><span style="color:#fbbf24">'+step.nat.warn+'</span>':'')
+          +'</div>';
+      }
+      return'<div class="step'+bc+'">'
+        +'<div class="step-chain mono" style="color:'+cc+'">'+step.chain+'<br><span class="step-table">('+step.table+')</span></div>'
+        +'<div class="step-cmd mono">'+cmd+natHtml+'</div>'
+        +'<div class="step-verdict mono '+vc+'">'+vd+'</div>'
+        +'</div>';
     }).join('');
-    var acc=result.final==='ACCEPT';
-    var verdictHtml='<div class="verdict-box '+(acc?'verdict-accept':'verdict-drop')+'">'
-      +'<span class="verdict-icon">'+(acc?'✅':'❌')+'</span>'
-      +'<div><div class="verdict-text" style="color:'+(acc?'#4ade80':'#f87171')+'">Paketea '+(acc?'ONARTUTA':'BLOKEATU')+'</div>'
-      +'<div class="verdict-sub">'+p.src+' → '+p.dst+' | '+p.proto+(p.dport!=='*'?':'+p.dport:'')+' | '+p.ctstate+'</div></div></div>';
-    simHtml='<div class="card"><div class="lbl">Ibilbide-azterketa</div>'+pktLine+'<div class="steps">'+stepsHtml+'</div>'+verdictHtml+'</div>';
+
+    var acc2=result.final==='ACCEPT';
+    var finalPkt=result.cur;
+    var finalNote='';
+    if(finalPkt.natDstIp||finalPkt.natSrcIp||finalPkt.dport!==p.dport){
+      finalNote='<div style="font-size:11px;color:#475569;margin-top:4px;font-family:monospace">';
+      if(finalPkt.natDstIp)finalNote+='dst: '+finalPkt.natDstIp+(finalPkt.dport?':'+finalPkt.dport:'')+'  ';
+      if(finalPkt.natSrcIp)finalNote+='src: '+finalPkt.natSrcIp+'  ';
+      if(!finalPkt.natDstIp&&finalPkt.dport!==p.dport)finalNote+='port: '+p.dport+' → '+finalPkt.dport;
+      finalNote+='</div>';
+    }
+    var verdictHtml='<div class="verdict-box '+(acc2?'verdict-accept':'verdict-drop')+'">'
+      +'<span class="verdict-icon">'+(acc2?'✅':'❌')+'</span>'
+      +'<div><div class="verdict-text" style="color:'+(acc2?'#4ade80':'#f87171')+'">Paketea '+(acc2?'ONARTUTA':'BLOKEATU')+'</div>'
+      +'<div class="verdict-sub">'+p.src+' → '+p.dst+' | '+p.proto+(p.dport!=='*'?':'+p.dport:'')+' | '+p.ctstate+'</div>'
+      +finalNote
+      +'</div></div>';
+
+    simHtml='<div class="card"><div class="lbl">Ibilbide-azterketa</div>'
+      +pktLine+'<div class="steps">'+stepsHtml+'</div>'+verdictHtml+'</div>';
   }
 
-  var rulesHtml=tabRules.length===0?'<div class="empty">Kate honetan ez dago araurik</div>'
+  // ── rules list ──
+  var rulesHtml=tabRules.length===0
+    ?'<div class="empty">Kate honetan ez dago araurik</div>'
     :tabRules.map(function(rule){
-      return'<div class="rule-item"><span class="rule-cmd mono">'+ruleToCmd(rule)+'</span>'
+      return'<div class="rule-item">'
+        +'<span class="rule-cmd mono">'+ruleToCmd(rule)+'</span>'
         +'<span class="target-tag '+targetTagCls(rule.target)+'">'+rule.target+'</span>'
-        +'<button class="btn btn-danger" onclick="delRule('+rule.id+')">✕</button></div>';
+        +'<button class="btn btn-danger" onclick="delRule('+rule.id+')">✕</button>'
+        +'</div>';
     }).join('');
 
+  // ── add form ──
   var isNat=NAT_CHAINS.includes(nr.chain);
   var nrTable=tableFor(nr.chain);
   var nrTargets=targetsFor(nr.chain);
+  if(!nrTargets.includes(nr.target))nr.target=nrTargets[0];
   var nrTargetOpts=nrTargets.map(function(t){return'<option value="'+t+'"'+(nr.target===t?' selected':'')+'>'+t+'</option>';}).join('');
-  var chainOpts=['PREROUTING','INPUT','FORWARD','OUTPUT','POSTROUTING'].map(function(c){return'<option value="'+c+'"'+(nr.chain===c?' selected':'')+'>'+c+'</option>';}).join('');
+  var chainOpts=ALL_CHAINS.map(function(c){return'<option value="'+c+'"'+(nr.chain===c?' selected':'')+'>'+c+'</option>';}).join('');
   var csChecks=['NEW','ESTABLISHED','RELATED','INVALID'].map(function(s){
     return'<label class="cs-label"><input type="checkbox" '+(nr.cs.includes(s)?'checked':'')+' onchange="toggleCs(\''+s+'\')"> '+s+'</label>';
   }).join('');
+
+  // NAT-specific fields
+  var natExtra='';
+  if(isNat){
+    natExtra='<div class="nat-note">ℹ️ <strong>'+nr.chain+'</strong> nat taulan dago. '
+      +(nr.chain==='PREROUTING'?'Sarrerako paketeetan: DNAT, REDIRECT.'
+        :'Irteera-paketeetan: MASQUERADE, SNAT.')+'</div>';
+
+    if(nr.target==='DNAT'){
+      var ipOpts=INTERNAL_HOSTS.map(function(h){return'<option value="'+h.ip+'"'+(nr.toIp===h.ip?' selected':'')+'>'+h.label+'</option>';}).join('');
+      natExtra+='<div class="dnat-panel">'
+        // Left — kanpoa
+        +'<div>'
+          +'<div class="dnat-side-title" style="color:#fbbf24">🌐 Kanpotik datorren eskaera</div>'
+          +'<div style="font-size:11px;color:#475569;margin-bottom:4px">--dport  <span style="color:#94a3b8">(kanpo-portua)</span></div>'
+          +'<input type="text" list="port-sugg" placeholder="8080" '
+            +'value="'+(nr.dport==='*'?'':nr.dport)+'" '
+            +'oninput="setNr(\'dport\',this.value||\'*\')" '
+            +'style="font-size:15px;font-weight:700;color:#fbbf24;border-color:#3d2d0a;margin-bottom:4px">'
+          +'<div style="font-size:10px;color:#475569">Interneteko erabiltzaileak zein portura deitzen duen (adib. 8080)</div>'
+        +'</div>'
+        // Arrow
+        +'<div class="dnat-arrow">→</div>'
+        // Right — barrua
+        +'<div>'
+          +'<div class="dnat-side-title" style="color:#4ade80">🖥️ Barne-zerbitzaria (DNAT)</div>'
+          +'<div style="font-size:11px;color:#475569;margin-bottom:4px">--to-destination IP</div>'
+          +'<select onchange="setNatIp(this.value)" style="margin-bottom:6px">'+ipOpts+'</select>'
+          +(nr.toIp===''?'<input type="text" placeholder="IP eskuz..." oninput="setNr(\'toIp\',this.value)" value="" style="margin-bottom:6px">':'')
+          +'<div style="font-size:11px;color:#475569;margin-bottom:4px">--to-destination port <span style="color:#94a3b8">(barne-portua)</span></div>'
+          +'<input type="text" list="port-sugg" placeholder="80" '
+            +'value="'+(nr.toPort||'')+'" '
+            +'oninput="setNr(\'toPort\',this.value)" '
+            +'style="font-size:15px;font-weight:700;color:#4ade80;border-color:#166534">'
+          +'<div style="font-size:10px;color:#475569;margin-top:3px">Zerbitzariak zein portutan entzuten duen (adib. 80)</div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="dnat-hint">⚠️ DNAT-en ondoren FORWARD arauak <strong style="color:#c4b5fd">barne-portua</strong> bilatu behar du'
+        +' (<span style="color:#4ade80">'+(nr.toPort||'80')+'</span>),'
+        +' ez kanpokoa (<span style="color:#fbbf24">'+(nr.dport==='*'?'8080':nr.dport)+'</span>).</div>';
+    }else if(nr.target==='SNAT'){
+      natExtra+='<div style="margin-bottom:10px"><div class="lbl">--to-source <span style="font-weight:400;text-transform:none">(kanpo-IP berria)</span></div>'
+        +'<input type="text" placeholder="'+WAN_IP+'" value="'+(nr.toIp||'')+'" oninput="setNr(\'toIp\',this.value)">'
+        +'<div style="font-size:10px;color:#334155;margin-top:3px">Suebakiaren kanpo-IP estatikoa (MASQUERADE erabili IP dinamikorako)</div></div>';
+    }else if(nr.target==='REDIRECT'){
+      natExtra+='<div style="margin-bottom:10px"><div class="lbl">--to-port</div>'
+        +'<input type="text" list="port-sugg" placeholder="8080" value="'+(nr.toPort||'')+'" oninput="setNr(\'toPort\',this.value)"></div>';
+    }else if(nr.target==='MASQUERADE'){
+      natExtra+='<div class="dnat-hint" style="border-color:#fbbf24">🎭 MASQUERADE-k automatikoki suebakiaren kanpo-IP-a (<strong style="color:#f1f5f9">'+WAN_IP+'</strong>) erabiltzen du. IP dinamikoa denean SNAT baino egokiagoa.</div>';
+    }
+  }
 
   var addFormHtml=showAdd?'<div class="add-form"><div class="add-form-title">Arau berria</div>'
     +'<div class="form-grid">'
@@ -327,43 +602,68 @@ function render(){
       +['*','WAN','LAN','DMZ'].map(function(o){return'<option value="'+o+'"'+(nr.outIf===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select></div>'
     +'<div class="form-field"><label>-p protokoloa</label><select onchange="setNr(\'proto\',this.value)">'
       +['any','tcp','udp','icmp'].map(function(o){return'<option value="'+o+'"'+(nr.proto===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select></div>'
-    +'<div class="form-field"><label>--dport portua</label><select onchange="setNr(\'dport\',this.value)">'
-      +['*','20','21','22','53','80','443','3306','8080'].map(function(o){return'<option value="'+o+'"'+(nr.dport===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select></div>'
-    +'<div class="form-field"><label>-j eragiketa</label><select onchange="setNr(\'target\',this.value)">'+nrTargetOpts+'</select></div>'
-    +'</div>'
-    +(isNat
-      ?'<div class="nat-note">⚠️ <strong>PREROUTING / POSTROUTING</strong> nat taulan daude. Eragiketa posibleak: MASQUERADE, SNAT, DNAT, REDIRECT. ACCEPT eta DROP ez daude onartuta kateetan.</div>'
-      :'<div style="margin-bottom:10px"><div class="lbl">--ctstate (conntrack)</div><div class="cs-row">'+csChecks+'</div></div>'
+    // --dport: only show in general grid for non-DNAT (DNAT has it in its own panel)
+    +(!(isNat&&nr.target==='DNAT')
+      ?'<div class="form-field"><label>--dport portua</label>'
+        +'<input type="text" list="port-sugg" placeholder="*" '
+        +'value="'+(nr.dport==='*'?'':nr.dport)+'" '
+        +'oninput="setNr(\'dport\',this.value||\'*\')"></div>'
+      :''
     )
-    +'<div class="cmd-preview">'+ruleToCmd({chain:nr.chain,table:nrTable,inIf:nr.inIf,outIf:nr.outIf,proto:nr.proto,dport:nr.dport,cs:nr.cs,target:nr.target,isPolicy:false})+'</div>'
-    +'<div class="btn-row"><button class="btn btn-primary" onclick="addRule()">Gehitu</button><button class="btn" onclick="setShowAdd(false)">Utzi</button></div>'
-    +'</div>':'';
+    +'<div class="form-field"><label>-j eragiketa</label><select onchange="setNrTarget(this.value)">'+nrTargetOpts+'</select></div>'
+    +'</div>'
+    +(!isNat?'<div style="margin-bottom:10px"><div class="lbl">--ctstate (conntrack)</div><div class="cs-row">'+csChecks+'</div></div>':natExtra)
+    +'<div class="cmd-preview">'+ruleToCmd({chain:nr.chain,table:nrTable,inIf:nr.inIf,outIf:nr.outIf,proto:nr.proto,dport:nr.dport,cs:nr.cs,target:nr.target,toIp:nr.toIp,toPort:nr.toPort,isPolicy:false})+'</div>'
+    +'<div class="btn-row">'
+    +'<button class="btn btn-primary" onclick="addRule()">Gehitu</button>'
+    +'<button class="btn" onclick="setShowAdd(false)">Utzi</button>'
+    +'</div></div>':'';
 
+  // ── tabs ──
   var tabsHtml=ALL_CHAINS.map(function(c){
     var cnt=rules.filter(function(r){return r.chain===c&&!r.isPolicy;}).length;
-    var cc=CHAIN_COLOR[c];
-    var a=tab===c;
+    var cc=CHAIN_COLOR[c], a=tab===c;
     return'<button class="tab-btn'+(a?' active':'')+'" style="'+(a?'color:'+cc:'')+'" onclick="setTab(\''+c+'\')">'+c+' ('+cnt+')</button>';
   }).join('');
 
+  // ── assemble ──
   document.getElementById('root').innerHTML=
+    // Topology
     '<div class="card">'+buildTopo()+'</div>'
+
+    // Device map
+    +'<div class="card">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<div class="lbl" style="margin-bottom:0">🗺️ Sare-mapa — IP erreferentzia</div>'
+    +'<button class="btn" style="font-size:11px" onclick="setState({showMap:!S.showMap})">'+(S.showMap?'▲ Ezkutatu':'▼ Erakutsi')+'</button></div>'
+    +devMapHtml
+    +'</div>'
+
+    // Presets
     +'<div class="lbl" style="margin-bottom:6px">Eszenatoki azkarrak</div>'
     +'<div class="preset-wrap">'+presetsHtml+'</div>'
+
+    // Packet form
     +'<div class="card"><div class="lbl">Pakete-parametroak</div>'
     +'<div class="form-grid">'
     +sel('Jatorria (-i)','src',['WAN','LAN','DMZ','FIREWALL'])
     +sel('Helmuga (-o)','dst',['WAN','LAN','DMZ','FIREWALL'])
     +sel('Protokoloa (-p)','proto',['tcp','udp','icmp','any'])
-    +sel('Portua (--dport)','dport',['*','20','21','22','53','80','443','3306','8080'])
+    +portInput('Portua (--dport)','dport')
     +sel('ctstate','ctstate',['NEW','ESTABLISHED','RELATED','INVALID'])
     +'</div><button class="btn btn-primary" onclick="runSim()">Bidali paketea →</button></div>'
+
+    // Simulation result
     +simHtml
+
+    // Rules manager
     +'<div class="card">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
     +'<div class="lbl" style="margin-bottom:0">Arau-kudeatzailea</div>'
-    +'<div class="btn-row"><button class="btn" onclick="resetRules()">Berrezarri</button>'
-    +'<button class="btn" onclick="setShowAdd(!S.showAdd)">+ Gehitu</button></div></div>'
+    +'<div class="btn-row">'
+    +'<button class="btn" style="font-size:11px" onclick="resetRules()">Berrezarri</button>'
+    +'<button class="btn" style="font-size:11px" onclick="setShowAdd(!S.showAdd)">+ Gehitu</button>'
+    +'</div></div>'
     +'<div class="policies">'+policies.map(function(r){return'<span class="policy-tag">'+ruleToCmd(r)+'</span>';}).join('')+'</div>'
     +'<div class="tabs">'+tabsHtml+'</div>'
     +'<div class="rule-list">'+rulesHtml+'</div>'
@@ -371,25 +671,29 @@ function render(){
     +'</div>';
 }
 
+// ── handlers ──────────────────────────────────────────────────
+function setState(patch){Object.assign(S,patch);render();}
 function runSim(){S.result=simulate(S.pkt,S.rules);render();}
 function setPkt(k,v){S.pkt[k]=v;S.result=null;render();}
-function applyPreset(p){S.pkt=p;S.result=null;render();}
-function resetRules(){S.rules=DEFAULT_RULES.map(function(r){return Object.assign({},r,{cs:r.cs.slice()});});S.result=null;render();}
+function applyPreset(p){S.pkt=Object.assign({},p);S.result=null;render();}
+function resetRules(){S.rules=DEFAULT_RULES.map(function(r){return Object.assign({},r,{cs:r.cs.slice(),toIp:r.toIp||'',toPort:r.toPort||''});});S.result=null;render();}
 function delRule(id){S.rules=S.rules.filter(function(r){return r.id!==id||r.isPolicy;});render();}
 function setTab(t){S.tab=t;render();}
 function setShowAdd(v){S.showAdd=v;render();}
 function setNr(k,v){S.nr[k]=v;render();}
+function setNrTarget(v){S.nr.target=v;S.nr.toIp='';S.nr.toPort='';render();}
 function setNrChain(chain){
-  var targets=targetsFor(chain);
   S.nr.chain=chain;
-  S.nr.target=targets[0];
+  S.nr.target=CHAIN_DEFAULT_TARGET[chain]||targetsFor(chain)[0];
+  S.nr.toIp='';S.nr.toPort='';S.nr.dport='*';
   if(NAT_CHAINS.includes(chain))S.nr.cs=[];
   render();
 }
-function toggleCs(s){var cs=S.nr.cs;var i=cs.indexOf(s);if(i>=0)cs.splice(i,1);else cs.push(s);render();}
+function setNatIp(v){S.nr.toIp=v;render();}
+function toggleCs(s){var cs=S.nr.cs,i=cs.indexOf(s);if(i>=0)cs.splice(i,1);else cs.push(s);render();}
 function addRule(){
   var table=tableFor(S.nr.chain);
-  S.rules.push(Object.assign({},S.nr,{table:table,id:S.nid,cs:S.nr.cs.slice(),isPolicy:false}));
+  S.rules.push(Object.assign({},S.nr,{table:table,id:S.nid,cs:S.nr.cs.slice(),toIp:S.nr.toIp||'',toPort:S.nr.toPort||'',isPolicy:false}));
   S.nid++;S.showAdd=false;render();
 }
 
